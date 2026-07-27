@@ -13,12 +13,18 @@ advances when the response matches the checklist configuration.
 
 ## Features
 
-- Brazilian Portuguese voice callouts and speech recognition;
+- English voice callouts and `en-US` speech recognition;
 - JSON-based checklists;
 - global `F9` shortcut, even while the simulator is in the foreground;
 - visual list of pending, current, and completed items;
-- manual item confirmation;
-- local voice processing on the computer;
+- configurable accepted responses, with exact response validation;
+- audible negative feedback for rejected responses;
+- manual item confirmation and checklist termination;
+- automatic transition to the next configured checklist;
+- Portuguese and English interface languages;
+- selectable Windows input microphone;
+- configurable global shortcut, including key combinations;
+- Windows speech recognition with no external API key required;
 - support for multiple aircraft and checklists.
 
 ## Download and install
@@ -36,6 +42,10 @@ Keep the `checklists` folder next to the executable. If Windows SmartScreen
 appears, verify that the file came from this repository before selecting
 **More info → Run anyway**.
 
+Smart App Control is different from SmartScreen and does not provide an
+individual app exception. Development builds signed with a local self-signed
+certificate can still be blocked by Smart App Control.
+
 If no ready-to-use version is available on the Releases page, follow the
 [build instructions](#build-from-source).
 
@@ -43,7 +53,8 @@ If no ready-to-use version is available on the Releases page, follow the
 
 - 64-bit Windows 10 or Windows 11;
 - a microphone configured as the Windows input device;
-- the **Portuguese (Brazil)** speech package installed in Windows;
+- the **English (United States)** speech-recognition package installed in
+  Windows;
 - [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0)
   if requested by Windows.
 
@@ -54,10 +65,15 @@ Microsoft Flight Simulator does not need to be running to test the application.
 On Windows 11:
 
 1. Open **Settings → Time & language → Language & region**.
-2. Add **Portuguese (Brazil)** and install its speech feature.
-3. Open **Settings → Privacy & security → Microphone**.
-4. Allow microphone access for desktop applications.
-5. Under **Privacy & security → Speech**, enable speech recognition.
+2. Add **English (United States)**.
+3. Open its **Language options** and download **Basic speech recognition**.
+4. Also download **Enhanced speech recognition**, when available.
+5. Open **Settings → Privacy & security → Microphone**.
+6. Allow microphone access for desktop applications.
+7. Under **Privacy & security → Speech**, enable online speech recognition.
+
+Installing only the text-to-speech voice is not enough. FSChecklist requires
+the English speech-recognition component.
 
 The names of these settings may be slightly different on Windows 10.
 
@@ -65,20 +81,52 @@ The names of these settings may be slightly different on Windows 10.
 
 1. Open `FSChecklist.exe`.
 2. Select an aircraft and a checklist.
-3. Click **START** or press `F9`.
+3. Click **INICIAR OU F9** or press `F9`.
 4. Wait for the copilot to read the item.
-5. Answer the callout through the microphone.
+5. Answer using one of the responses configured in the checklist JSON.
 6. Follow the progress in the checklist panel.
 
-The microphone remains active while the checklist is running. The copilot's
-voice is ignored while a callout is being played.
+The microphone remains open throughout the checklist, including while the
+copilot is reading a callout. After the final item, the app announces the
+completion, selects the next configured checklist, and turns the microphone
+off. Press `F9` again to start the next checklist.
 
 Available controls:
 
-- **✓ — Force check:** manually confirms the current item;
-- **■ — Finish:** stops the checklist without confirming the remaining items.
+- **Check icon — Force check:** manually confirms the current item;
+- **Stop icon — Finish:** ends the current checklist and selects the next one.
 
-A missing, uncertain, or mismatched response keeps the current item pending.
+A missing or mismatched response keeps the current item pending. The app emits
+a negative beep, says that the response was not confirmed, and displays the
+recognized text so the pilot can retry.
+
+## Settings
+
+Select the gear button in the top-right corner to open **Settings**.
+
+Available options:
+
+- **Interface language:** switches all application text between Portuguese and
+  English. Checklist content and spoken responses remain in English;
+- **Input microphone:** lists available capture devices and makes the selected
+  device the default Windows input microphone, which is the device used by
+  Windows speech recognition;
+- **Shortcut:** opens a small capture form. Press a key or combination such as
+  `F10`, `Ctrl+F9`, or `Ctrl+Shift+F10`, then confirm it.
+
+Settings are saved in:
+
+```text
+%LocalAppData%\FSChecklist\settings.json
+```
+
+The settings button is disabled while a checklist is running.
+
+## Error messages
+
+Handled errors and unexpected interface exceptions are displayed in a modal
+dialog instead of being shown only in the status bar. The dialog contains the
+error details and a single **Entendido** / **Understood** button.
 
 ## Troubleshooting
 
@@ -86,14 +134,15 @@ A missing, uncertain, or mismatched response keeps the current item pending.
 
 - confirm that the correct microphone is the Windows default input device;
 - verify microphone permissions for desktop applications;
-- install the Portuguese (Brazil) speech package;
+- install the English (United States) speech-recognition package;
+- confirm that the status reports `en-US` recognition as ready;
 - speak only after the status indicates that the microphone is listening.
 
 ### F9 does not work
 
 - check whether the interface reports that global `F9` is active;
 - close any other application that may be intercepting the key;
-- use the **START** button as an alternative.
+- use the **INICIAR OU F9** button as an alternative.
 
 ### The application does not open
 
@@ -108,17 +157,35 @@ Place `.json` files inside the `checklists` folder. Item content and order are
 controlled exclusively by the file: the application does not invent, reorder,
 or skip steps using AI.
 
-Checklist that accepts any recognized response:
+Checklist that accepts only a global list of exact responses:
 
 ```json
 {
   "aircraft": "Fenix A320",
-  "rules": { "acceptAnyAnswer": true },
+  "language": "en-US",
+  "rules": {
+    "acceptAnyAnswer": false,
+    "acceptedResponses": [
+      "set",
+      "check",
+      "on",
+      "off",
+      "auto",
+      "auto and set"
+    ]
+  },
   "checklists": [
     {
       "id": "before_start",
       "name": "Before Start",
+      "next": "Start",
       "items": ["Parking Brake", "Navi Lights"]
+    },
+    {
+      "id": "start",
+      "name": "Start",
+      "next": null,
+      "items": ["Beacon", "APU"]
     }
   ]
 }
@@ -130,7 +197,8 @@ Checklist with specific responses:
 {
   "schemaVersion": 1,
   "aircraft": "B777",
-  "language": "pt-BR",
+  "language": "en-US",
+  "rules": { "acceptAnyAnswer": false },
   "checklists": [
     {
       "id": "before-start",
@@ -140,7 +208,7 @@ Checklist with specific responses:
         {
           "id": "parking-brake",
           "callout": "Parking brake",
-          "responses": ["set", "acionado"]
+          "responses": ["set", "released"]
         }
       ]
     }
@@ -168,12 +236,12 @@ dotnet publish .\src\FSChecklist.csproj `
   --configuration Release `
   --runtime win-x64 `
   --self-contained false `
-  --output .\dist
-New-Item .\dist\checklists -ItemType Directory -Force
-Copy-Item .\checklists\*.json .\dist\checklists -Force
+  --output .\.build-output
+Copy-Item .\.build-output\FSChecklist.exe .\FSChecklist.exe -Force
 ```
 
-The executable will be created at `dist\FSChecklist.exe`.
+The executable will be created at `FSChecklist.exe` in the repository root.
+Keep the existing `checklists` folder next to it.
 
 The `build.ps1` script is the maintainer's distribution workflow. It also signs
 the executable, so it requires the Windows SDK and a local
@@ -181,7 +249,9 @@ the executable, so it requires the Windows SDK and a local
 
 ## Privacy and safety
 
-- audio is processed locally by the Windows speech engine;
+- audio is handled by Windows speech recognition and may use Microsoft's online
+  speech service when online speech recognition is enabled;
+- FSChecklist does not store recordings or send audio to its own server;
 - unrecognized responses do not advance the checklist;
 - the interface always displays the current item and progress;
 - checklist content comes from JSON files;

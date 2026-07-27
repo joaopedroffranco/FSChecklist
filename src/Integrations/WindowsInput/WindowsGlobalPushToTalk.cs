@@ -2,6 +2,7 @@ using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using FSChecklist.Domain.Settings;
 using FSChecklist.Features.Input;
 
 namespace FSChecklist.Integrations.WindowsInput
@@ -16,12 +17,20 @@ namespace FSChecklist.Integrations.WindowsInput
 
         private readonly HookProcedure procedure;
         private IntPtr hook;
-        private bool f9Down;
+        private bool hotkeyDown;
+        private HotkeySettings hotkey;
 
         public event Action<bool> StateChanged;
-
-        public WindowsGlobalPushToTalk()
+        public HotkeySettings Hotkey
         {
+            get { return hotkey.Clone(); }
+        }
+
+        public WindowsGlobalPushToTalk(HotkeySettings hotkey)
+        {
+            this.hotkey = hotkey == null
+                ? new HotkeySettings()
+                : hotkey.Clone();
             procedure = HookCallback;
             hook = SetWindowsHookEx(WhKeyboardLl, procedure, GetModuleHandle(null), 0);
             if (hook == IntPtr.Zero)
@@ -39,22 +48,45 @@ namespace FSChecklist.Integrations.WindowsInput
                 {
                     KeyboardData keyboardData =
                         Marshal.PtrToStructure<KeyboardData>(data);
-                    if ((Keys)keyboardData.VirtualKeyCode == Keys.F9)
+                    Keys key = (Keys)keyboardData.VirtualKeyCode;
+                    if (key == (Keys)hotkey.KeyCode)
                     {
-                        if (isDown && !f9Down)
+                        if (isDown &&
+                            !hotkeyDown &&
+                            ModifiersMatch())
                         {
-                            f9Down = true;
+                            hotkeyDown = true;
                             RaiseStateChanged(true);
                         }
-                        else if (isUp && f9Down)
+                        else if (isUp && hotkeyDown)
                         {
-                            f9Down = false;
+                            hotkeyDown = false;
                             RaiseStateChanged(false);
                         }
                     }
                 }
             }
             return CallNextHookEx(hook, code, message, data);
+        }
+
+        public void UpdateHotkey(HotkeySettings hotkey)
+        {
+            this.hotkey = hotkey == null
+                ? new HotkeySettings()
+                : hotkey.Clone();
+            hotkeyDown = false;
+        }
+
+        private bool ModifiersMatch()
+        {
+            return IsPressed(Keys.ControlKey) == hotkey.Control &&
+                   IsPressed(Keys.Menu) == hotkey.Alt &&
+                   IsPressed(Keys.ShiftKey) == hotkey.Shift;
+        }
+
+        private static bool IsPressed(Keys key)
+        {
+            return (GetAsyncKeyState((int)key) & 0x8000) != 0;
         }
 
         private void RaiseStateChanged(bool isDown)
@@ -95,5 +127,8 @@ namespace FSChecklist.Integrations.WindowsInput
 
         [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern IntPtr GetModuleHandle(string moduleName);
+
+        [DllImport("user32.dll")]
+        private static extern short GetAsyncKeyState(int virtualKey);
     }
 }

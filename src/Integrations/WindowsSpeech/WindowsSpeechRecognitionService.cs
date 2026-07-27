@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using FSChecklist.Features.Localization;
 using FSChecklist.Features.SpeechRecognition;
 using Windows.Devices.Enumeration;
 using Windows.Foundation;
@@ -14,6 +15,7 @@ namespace FSChecklist.Integrations.WindowsSpeech
     internal sealed class WindowsSpeechRecognitionService : ISpeechRecognitionService
     {
         private readonly string languageTag;
+        private readonly IAppLocalizer localizer;
         private readonly SemaphoreSlim gate = new SemaphoreSlim(1, 1);
         private Language language;
         private SpeechRecognizer recognizer;
@@ -29,9 +31,12 @@ namespace FSChecklist.Integrations.WindowsSpeech
             ListeningStateChanged;
         public event EventHandler RecognitionCompleted;
 
-        public WindowsSpeechRecognitionService(string languageTag)
+        public WindowsSpeechRecognitionService(
+            string languageTag,
+            IAppLocalizer localizer)
         {
             this.languageTag = languageTag;
+            this.localizer = localizer;
         }
 
         public async Task InitializeAsync()
@@ -43,19 +48,25 @@ namespace FSChecklist.Integrations.WindowsSpeech
                         StringComparison.OrdinalIgnoreCase));
                 if (language == null)
                     throw new InvalidOperationException(
-                        "O Windows nao oferece reconhecimento para " + languageTag + ".");
+                        localizer.Format(
+                            "RecognitionLanguageUnavailable",
+                            languageTag));
 
                 await CreateRecognizerAsync();
 
                 IsReady = true;
                 string microphoneName = await GetDefaultMicrophoneNameAsync();
-                Status = "Reconhecimento " + languageTag +
-                         " pronto. Microfone: " + microphoneName + ".";
+                Status = localizer.Format(
+                    "RecognitionReady",
+                    languageTag,
+                    microphoneName);
             }
             catch (Exception error)
             {
                 IsReady = false;
-                Status = "Voz indisponivel: " + error.GetBaseException().Message;
+                Status = localizer.Format(
+                    "RecognitionUnavailable",
+                    error.GetBaseException().Message);
                 DisposeRecognizer();
             }
         }
@@ -142,7 +153,9 @@ namespace FSChecklist.Integrations.WindowsSpeech
                 await recognizer.CompileConstraintsAsync();
             if (compilation.Status != SpeechRecognitionResultStatus.Success)
                 throw new InvalidOperationException(
-                    "Falha ao preparar reconhecimento: " + compilation.Status);
+                    localizer.Format(
+                        "RecognitionPrepareFailure",
+                        compilation.Status));
 
             recognizer.ContinuousRecognitionSession.ResultGenerated += OnResultGenerated;
             recognizer.ContinuousRecognitionSession.Completed += OnCompleted;
@@ -223,24 +236,24 @@ namespace FSChecklist.Integrations.WindowsSpeech
             handler(this, new SpeechListeningStateChangedEventArgs(state));
         }
 
-        private static async Task<string> GetDefaultMicrophoneNameAsync()
+        private async Task<string> GetDefaultMicrophoneNameAsync()
         {
             try
             {
                 string deviceId = MediaDevice.GetDefaultAudioCaptureId(
                     AudioDeviceRole.Default);
                 if (string.IsNullOrWhiteSpace(deviceId))
-                    return "nenhum dispositivo padrao";
+                    return localizer.Get("NoDefaultMicrophone");
 
                 DeviceInformation device =
                     await DeviceInformation.CreateFromIdAsync(deviceId);
                 return string.IsNullOrWhiteSpace(device.Name)
-                    ? "dispositivo padrao"
+                    ? localizer.Get("GenericDefaultMicrophone")
                     : device.Name;
             }
             catch
             {
-                return "dispositivo padrao";
+                return localizer.Get("GenericDefaultMicrophone");
             }
         }
 

@@ -1,9 +1,17 @@
 using System;
 using System.Windows.Forms;
+using FSChecklist.Domain.Settings;
+using FSChecklist.Features.AudioInput;
+using FSChecklist.Features.Errors;
 using FSChecklist.Features.Input;
+using FSChecklist.Features.Localization;
 using FSChecklist.Features.Main;
 using FSChecklist.Features.Repository;
+using FSChecklist.Features.Settings;
 using FSChecklist.Features.SpeechRecognition;
+using FSChecklist.Integrations.Localization;
+using FSChecklist.Integrations.Settings;
+using FSChecklist.Integrations.WindowsAudio;
 using FSChecklist.Integrations.WindowsInput;
 using FSChecklist.Integrations.WindowsSpeech;
 
@@ -17,11 +25,28 @@ namespace FSChecklist
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
+            IAppSettingsRepository settingsRepository =
+                new JsonAppSettingsRepository();
+            AppSettings settings = settingsRepository.Load();
+            IAppLocalizer localizer =
+                new AppLocalizer(settings.UiLanguage);
+            IAudioInputDeviceService audioInput =
+                new WindowsAudioInputDeviceService();
+            Application.SetUnhandledExceptionMode(
+                UnhandledExceptionMode.CatchException);
+            Application.ThreadException += delegate(object sender, System.Threading.ThreadExceptionEventArgs args)
+            {
+                ErrorDialog.Show(
+                    null,
+                    args.Exception.GetBaseException().Message,
+                    localizer);
+            };
+
             IGlobalPushToTalk pushToTalk = null;
             string hotkeyError = string.Empty;
             try
             {
-                pushToTalk = new WindowsGlobalPushToTalk();
+                pushToTalk = new WindowsGlobalPushToTalk(settings.Hotkey);
             }
             catch (Exception error)
             {
@@ -30,11 +55,29 @@ namespace FSChecklist
 
             IChecklistRepository repository = new JsonChecklistRepository();
             ISpeechRecognitionService recognition =
-                new WindowsSpeechRecognitionService("pt-BR");
+                new WindowsSpeechRecognitionService("en-US", localizer);
             ISpeechSynthesisService synthesis = new WindowsSpeechSynthesisService();
 
-            Application.Run(new MainForm(
-                repository, recognition, synthesis, pushToTalk, hotkeyError));
+            try
+            {
+                Application.Run(new MainForm(
+                    repository,
+                    recognition,
+                    synthesis,
+                    pushToTalk,
+                    hotkeyError,
+                    settingsRepository,
+                    settings,
+                    localizer,
+                    audioInput));
+            }
+            catch (Exception error)
+            {
+                ErrorDialog.Show(
+                    null,
+                    error.GetBaseException().Message,
+                    localizer);
+            }
         }
     }
 }

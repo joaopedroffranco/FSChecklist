@@ -1,3 +1,4 @@
+using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -19,10 +20,12 @@ namespace FSChecklist.Features.Main
         private readonly ComboBox aircraftBox = new ComboBox();
         private readonly ComboBox checklistBox = new ComboBox();
         private readonly Button startButton = new Button();
+        private readonly Button settingsButton = new Button();
         private readonly Button forceCheckButton = new Button();
         private readonly Button finishButton = new Button();
+        private readonly Label aircraftTitle = new Label();
+        private readonly Label checklistTitle = new Label();
         private readonly Label microphoneStatusLabel = new Label();
-        private readonly PictureBox logoPictureBox = new PictureBox();
         private readonly Label progressLabel = new Label();
         private readonly Label stateLabel = new Label();
         private readonly Label checklistNameLabel = new Label();
@@ -50,45 +53,58 @@ namespace FSChecklist.Features.Main
             KeyPreview = true;
             Icon = LoadAppIcon();
 
-            logoPictureBox.Image = LoadLogo();
-            logoPictureBox.SizeMode = PictureBoxSizeMode.Zoom;
-            logoPictureBox.SetBounds(25, 16, 48, 48);
-
-            Label title = MakeLabel("FSChecklist", 23F, FontStyle.Bold);
-            title.SetBounds(86, 20, 350, 42);
-
-            Label aircraftTitle = MakeLabel("Aeronave", 9F, FontStyle.Regular);
+            ConfigureLabel(
+                aircraftTitle,
+                localizer.Get("Aircraft"),
+                9F,
+                FontStyle.Regular);
             aircraftTitle.ForeColor = muted;
-            aircraftTitle.SetBounds(25, 82, 200, 20);
-            aircraftBox.SetBounds(25, 101, 180, 38);
+            aircraftTitle.SetBounds(25, 14, 180, 20);
+            aircraftBox.SetBounds(25, 33, 180, 38);
             aircraftBox.DropDownStyle = ComboBoxStyle.DropDownList;
             aircraftBox.DrawMode = DrawMode.OwnerDrawFixed;
             aircraftBox.ItemHeight = 32;
             aircraftBox.DrawItem += DrawComboBoxItem;
 
-            Label checklistTitle = MakeLabel("Checklist", 9F, FontStyle.Regular);
+            ConfigureLabel(
+            checklistTitle,
+                localizer.Get("Checklist"),
+                9F,
+                FontStyle.Regular);
             checklistTitle.ForeColor = muted;
-            checklistTitle.SetBounds(215, 82, 200, 20);
-            checklistBox.SetBounds(215, 101, 205, 38);
+            checklistTitle.SetBounds(215, 14, 205, 20);
+            checklistBox.SetBounds(215, 33, 205, 38);
             checklistBox.DropDownStyle = ComboBoxStyle.DropDownList;
             checklistBox.DrawMode = DrawMode.OwnerDrawFixed;
             checklistBox.ItemHeight = 32;
             checklistBox.DrawItem += DrawComboBoxItem;
 
-            ConfigureButton(startButton, "INICIAR OU F9", primary);
-            startButton.SetBounds(430, 101, 195, 38);
+            ConfigureButton(
+                startButton,
+                localizer.Format("StartButton", CurrentHotkeyText()),
+                primary);
+            startButton.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
+            startButton.SetBounds(430, 33, 145, 38);
+
+            ConfigureButton(settingsButton, string.Empty, disabledButton);
+            settingsButton.Name = "SettingsButton";
+            settingsButton.SetBounds(585, 33, 40, 38);
+            settingsButton.Paint += DrawSettingsIcon;
+            actionToolTip.SetToolTip(
+                settingsButton,
+                localizer.Get("Settings"));
 
             var centerPanel = new Panel();
             centerPanel.BackColor = panelColor;
             centerPanel.BorderStyle = BorderStyle.FixedSingle;
-            centerPanel.SetBounds(25, 158, 600, 690);
+            centerPanel.SetBounds(25, 90, 600, 812);
             centerPanel.Anchor =
                 AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
 
-            progressLabel.Text = "Nenhuma checklist iniciada";
+            progressLabel.Text = localizer.Get("NoChecklistStarted");
             progressLabel.ForeColor = muted;
             progressLabel.SetBounds(20, 14, 220, 24);
-            stateLabel.Text = "PRONTO";
+            stateLabel.Text = localizer.Get("Ready");
             stateLabel.ForeColor = success;
             stateLabel.Font = new Font(Font, FontStyle.Bold);
             stateLabel.TextAlign = ContentAlignment.TopRight;
@@ -106,7 +122,7 @@ namespace FSChecklist.Features.Main
             checklistNameLabel.Anchor =
                 AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
 
-            challengeLabel.Text = "Selecione uma aeronave e uma checklist";
+            challengeLabel.Text = localizer.Get("SelectChecklist");
             challengeLabel.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
             challengeLabel.TextAlign = ContentAlignment.MiddleLeft;
             challengeLabel.Visible = false;
@@ -126,25 +142,25 @@ namespace FSChecklist.Features.Main
             checklistItemsPanel.AutoScroll = false;
             checklistItemsPanel.BorderStyle = BorderStyle.FixedSingle;
             checklistItemsPanel.Padding = new Padding(0);
-            checklistItemsPanel.SetBounds(20, 116, 555, 405);
+            checklistItemsPanel.SetBounds(20, 116, 555, 592);
             checklistItemsPanel.Anchor =
                 AnchorStyles.Top | AnchorStyles.Bottom |
                 AnchorStyles.Left | AnchorStyles.Right;
 
-            heardLabel.Text = "Aguardando inicio";
+            heardLabel.Text = localizer.Get("WaitingStart");
             heardLabel.ForeColor = Color.FromArgb(169, 183, 200);
             heardLabel.TextAlign = ContentAlignment.MiddleLeft;
-            heardLabel.SetBounds(20, 560, 455, 32);
+            heardLabel.SetBounds(20, 748, 455, 32);
             heardLabel.Anchor =
                 AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
 
-            microphoneStatusLabel.Text = "Microfone desligado";
+            microphoneStatusLabel.Text = localizer.Get("MicrophoneOff");
             microphoneStatusLabel.BackColor = Color.Transparent;
             microphoneStatusLabel.ForeColor = muted;
             microphoneStatusLabel.Font =
                 new Font("Segoe UI", 9F, FontStyle.Bold);
             microphoneStatusLabel.TextAlign = ContentAlignment.MiddleLeft;
-            microphoneStatusLabel.SetBounds(20, 528, 555, 28);
+            microphoneStatusLabel.SetBounds(20, 716, 555, 28);
             microphoneStatusLabel.Anchor =
                 AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
 
@@ -156,36 +172,29 @@ namespace FSChecklist.Features.Main
 
             ConfigureButton(forceCheckButton, string.Empty, primary);
             forceCheckButton.Paint += DrawCheckIcon;
-            forceCheckButton.SetBounds(475, 560, 48, 42);
+            forceCheckButton.SetBounds(475, 748, 48, 42);
             forceCheckButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             actionToolTip.SetToolTip(
                 forceCheckButton,
-                "Confirmar manualmente o item atual");
+                localizer.Get("ForceCheckTip"));
             SetCompactActionEnabled(forceCheckButton, false, primary);
 
             ConfigureButton(finishButton, string.Empty, danger);
             finishButton.Paint += DrawStopIcon;
-            finishButton.SetBounds(527, 560, 48, 42);
+            finishButton.SetBounds(527, 748, 48, 42);
             finishButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             actionToolTip.SetToolTip(
                 finishButton,
-                "Encerrar a checklist atual");
+                localizer.Get("FinishTip"));
             SetCompactActionEnabled(finishButton, false, danger);
 
             centerPanel.Controls.Add(forceCheckButton);
             centerPanel.Controls.Add(finishButton);
 
-            statusLabel.Text = "Carregando checklists...";
-            statusLabel.ForeColor = muted;
-            statusLabel.TextAlign = ContentAlignment.MiddleCenter;
-            statusLabel.SetBounds(25, 860, 600, 42);
-            statusLabel.Anchor =
-                AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-
             Controls.AddRange(new Control[]
             {
-                logoPictureBox, title, aircraftTitle, aircraftBox, checklistTitle, checklistBox,
-                startButton, centerPanel, statusLabel
+                aircraftTitle, aircraftBox, checklistTitle, checklistBox,
+                settingsButton, startButton, centerPanel
             });
         }
 
@@ -267,14 +276,38 @@ namespace FSChecklist.Features.Main
                 args.Graphics.FillRectangle(brush, x, y, iconSize, iconSize);
         }
 
-        private static Image LoadLogo()
+        private static void DrawSettingsIcon(object sender, PaintEventArgs args)
         {
-            using (System.IO.Stream stream = typeof(MainForm).Assembly
-                .GetManifestResourceStream("FSChecklist.Assets.Logo.png"))
+            var button = (Button)sender;
+            float centerX = button.ClientSize.Width / 2F;
+            float centerY = button.ClientSize.Height / 2F;
+
+            args.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            using (var pen = new Pen(Color.White, 2F))
             {
-                if (stream == null) return null;
-                using (Image image = Image.FromStream(stream))
-                    return new Bitmap(image);
+                for (int index = 0; index < 8; index++)
+                {
+                    double angle = index * Math.PI / 4D;
+                    args.Graphics.DrawLine(
+                        pen,
+                        centerX + (float)(Math.Cos(angle) * 6F),
+                        centerY + (float)(Math.Sin(angle) * 6F),
+                        centerX + (float)(Math.Cos(angle) * 9F),
+                        centerY + (float)(Math.Sin(angle) * 9F));
+                }
+
+                args.Graphics.DrawEllipse(
+                    pen,
+                    centerX - 6F,
+                    centerY - 6F,
+                    12F,
+                    12F);
+                args.Graphics.DrawEllipse(
+                    pen,
+                    centerX - 1.5F,
+                    centerY - 1.5F,
+                    3F,
+                    3F);
             }
         }
 
@@ -291,13 +324,21 @@ namespace FSChecklist.Features.Main
 
         private static Label MakeLabel(string text, float size, FontStyle style)
         {
-            return new Label
-            {
-                Text = text,
-                Font = new Font("Segoe UI", size, style),
-                AutoSize = false,
-                BackColor = Color.Transparent
-            };
+            var label = new Label();
+            ConfigureLabel(label, text, size, style);
+            return label;
+        }
+
+        private static void ConfigureLabel(
+            Label label,
+            string text,
+            float size,
+            FontStyle style)
+        {
+            label.Text = text;
+            label.Font = new Font("Segoe UI", size, style);
+            label.AutoSize = false;
+            label.BackColor = Color.Transparent;
         }
 
         private static void ConfigureButton(Button button, string text, Color color)

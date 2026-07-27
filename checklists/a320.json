@@ -1,9 +1,9 @@
 {
   "aircraft": "Fenix A320",
   "version": "1.0",
-  "language": "pt-BR",
+  "language": "en-US",
   "rules": {
-    "speakLanguage": "pt-BR",
+    "speakLanguage": "en-US",
     "checklistLanguage": "en",
     "onlyRespondWhenCalled": "Copiloto",
     "acceptAnyAnswer": false,

@@ -10,3 +10,4 @@ dist/
 .appdata/
 .build-output/
 .local-signing/
+/FSChecklist.exe
