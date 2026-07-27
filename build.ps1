@@ -46,5 +46,40 @@ try {
     throw 'Nao foi possivel sobrescrever dist\FSChecklist.exe. Feche o aplicativo e execute o build novamente.'
 }
 
+$signingCertificate = Get-ChildItem Cert:\CurrentUser\My |
+    Where-Object {
+        $_.Subject -eq 'CN=FSChecklist Local' -and
+        $_.HasPrivateKey -and
+        $_.NotAfter -gt (Get-Date)
+    } |
+    Sort-Object NotAfter -Descending |
+    Select-Object -First 1
+
+if (-not $signingCertificate) {
+    throw 'Certificado de assinatura "CN=FSChecklist Local" nao encontrado em Cert:\CurrentUser\My.'
+}
+
+$signTool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" `
+    -Recurse `
+    -Filter signtool.exe `
+    -ErrorAction SilentlyContinue |
+    Where-Object FullName -Like '*\x64\signtool.exe' |
+    Sort-Object FullName -Descending |
+    Select-Object -First 1
+
+if (-not $signTool) {
+    throw 'SignTool nao encontrado. Instale o Windows SDK para assinar o executavel.'
+}
+
+& $signTool.FullName sign `
+    /fd SHA256 `
+    /sha1 $signingCertificate.Thumbprint `
+    /s My `
+    $output
+
+if ($LASTEXITCODE -ne 0) {
+    throw "Falha ao assinar o executavel: SignTool retornou $LASTEXITCODE"
+}
+
 Copy-Item (Join-Path $PSScriptRoot 'checklists\*.json') $checklistOutput -Force
 Write-Host "Build concluido: $output"

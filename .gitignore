@@ -9,3 +9,4 @@ dist/
 .nuget/
 .appdata/
 .build-output/
+.local-signing/
