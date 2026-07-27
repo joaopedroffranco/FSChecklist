@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Media;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using FSChecklist.Domain.Checklists;
@@ -72,7 +71,6 @@ namespace FSChecklist.Features.Main
                 if (!checklistRunning) UpdateReadyChecklist();
             };
             startButton.Click += async delegate { await StartCurrentChecklistAsync(); };
-            repeatButton.Click += async delegate { await RepeatCurrentItemAsync(); };
             forceCheckButton.Click +=
                 async delegate { await ForceCurrentItemAsync(); };
             finishButton.Click +=
@@ -271,7 +269,6 @@ namespace FSChecklist.Features.Main
             listeningAnimationStep = 0;
             listeningAnimationTimer.Start();
             forceCheckButton.Enabled = true;
-            SystemSounds.Beep.Play();
             AnimateListening();
         }
 
@@ -464,18 +461,6 @@ namespace FSChecklist.Features.Main
             await PresentCurrentItemAsync();
         }
 
-        private async Task RepeatCurrentItemAsync()
-        {
-            if (!checklistRunning || processingResponse || session.CurrentItem == null)
-                return;
-
-            processingResponse = true;
-            awaitingResponse = false;
-            listeningAnimationTimer.Stop();
-            processingResponse = false;
-            await PresentCurrentItemAsync();
-        }
-
         private async Task ForceCurrentItemAsync()
         {
             if (!checklistRunning ||
@@ -651,7 +636,6 @@ namespace FSChecklist.Features.Main
             checklistBox.Enabled = enabled;
             startButton.Enabled = enabled && speechRecognition.IsReady;
             forceCheckButton.Enabled = !enabled && awaitingResponse;
-            repeatButton.Enabled = !enabled;
             finishButton.Enabled = !enabled;
         }
 

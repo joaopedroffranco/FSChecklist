@@ -18,7 +18,6 @@ namespace FSChecklist.Features.Main
         private readonly Button startButton = new Button();
         private readonly Button forceCheckButton = new Button();
         private readonly Button finishButton = new Button();
-        private readonly Button repeatButton = new Button();
         private readonly Label microphoneStatusLabel = new Label();
         private readonly PictureBox logoPictureBox = new PictureBox();
         private readonly Label progressLabel = new Label();
@@ -134,19 +133,14 @@ namespace FSChecklist.Features.Main
             microphoneStatusLabel.Font =
                 new Font("Segoe UI", 9.5F, FontStyle.Bold);
             microphoneStatusLabel.TextAlign = ContentAlignment.MiddleCenter;
-            microphoneStatusLabel.SetBounds(25, 480, 285, 45);
+            microphoneStatusLabel.SetBounds(25, 480, 415, 45);
             microphoneStatusLabel.Anchor =
                 AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
 
             ConfigureButton(forceCheckButton, "FORCAR CHECK", primary);
-            forceCheckButton.SetBounds(320, 480, 130, 45);
+            forceCheckButton.SetBounds(450, 480, 130, 45);
             forceCheckButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             forceCheckButton.Enabled = false;
-
-            ConfigureButton(repeatButton, "REPETIR", Color.FromArgb(52, 66, 86));
-            repeatButton.SetBounds(460, 480, 120, 45);
-            repeatButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            repeatButton.Enabled = false;
 
             ConfigureButton(finishButton, "TERMINAR", danger);
             finishButton.SetBounds(590, 480, 145, 45);
@@ -164,7 +158,7 @@ namespace FSChecklist.Features.Main
             {
                 logoPictureBox, title, aircraftTitle, aircraftBox, checklistTitle, checklistBox,
                 startButton, centerPanel, microphoneStatusLabel, forceCheckButton,
-                repeatButton, finishButton, statusLabel
+                finishButton, statusLabel
             });
         }
 
