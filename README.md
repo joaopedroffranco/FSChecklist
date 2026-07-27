@@ -5,7 +5,20 @@ Ele simula o fluxo *challenge and response*: o copiloto lê o item, o piloto
 responde por push-to-talk, e o software só avança quando a resposta corresponde
 ao JSON.
 
-## Executar
+## Executar o aplicativo
+
+Para usar a versao compilada, abra `dist\FSChecklist.exe`.
+
+Para gerar ou atualizar o executavel:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\build.ps1
+```
+
+O build usa o compilador .NET Framework que ja acompanha o Windows e copia as
+checklists para `dist\checklists`.
+
+## Executar a versao PowerShell
 
 Requisitos:
 
