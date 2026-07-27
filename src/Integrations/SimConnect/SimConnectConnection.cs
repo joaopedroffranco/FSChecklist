@@ -1,5 +1,4 @@
 using System;
-using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Threading;
 using FSChecklist.Features.Simulator;
@@ -16,16 +15,10 @@ namespace FSChecklist.Integrations.SimConnect
         private IntPtr connection;
         private bool disposed;
         private bool connected;
-        private string status = "SimConnect: aguardando o simulador.";
 
         public bool IsConnected
         {
             get { lock (sync) return connected; }
-        }
-
-        public string Status
-        {
-            get { lock (sync) return status; }
         }
 
         public event Action StatusChanged;
@@ -64,14 +57,12 @@ namespace FSChecklist.Integrations.SimConnect
                     IntPtr.Zero);
                 if (result < 0)
                 {
-                    Disconnect("SimConnect: conexão perdida; tentando novamente.");
+                    Disconnect();
                     continue;
                 }
-
                 if (stopSignal.WaitOne(100)) break;
             }
-
-            Disconnect(null);
+            Disconnect();
         }
 
         private void TryConnect()
@@ -80,79 +71,58 @@ namespace FSChecklist.Integrations.SimConnect
             {
                 IntPtr candidate;
                 int result = NativeMethods.SimConnect_Open(
-                    out candidate,
-                    "FSChecklist",
-                    IntPtr.Zero,
-                    0,
-                    IntPtr.Zero,
-                    0);
+                    out candidate, "FSChecklist", IntPtr.Zero, 0, IntPtr.Zero, 0);
                 if (result < 0)
                 {
-                    SetStatus(
-                        false,
-                        "SimConnect: MSFS não encontrado; nova tentativa em 5 s.");
+                    SetConnected(false);
                     return;
                 }
-
                 connection = candidate;
-                SetStatus(true, "SimConnect: conectado ao Microsoft Flight Simulator.");
+                SetConnected(true);
             }
             catch (DllNotFoundException)
             {
-                SetStatus(
-                    false,
-                    "SimConnect: SimConnect.dll não encontrado ao lado do aplicativo.");
+                SetConnected(false);
                 stopSignal.Set();
             }
             catch (BadImageFormatException)
             {
-                SetStatus(
-                    false,
-                    "SimConnect: SimConnect.dll incompatível; use a versão x64.");
+                SetConnected(false);
                 stopSignal.Set();
             }
-            catch (Exception error)
+            catch (Exception)
             {
-                SetStatus(
-                    false,
-                    "SimConnect: " + new Win32Exception(
-                        Marshal.GetHRForException(error)).Message);
+                SetConnected(false);
             }
         }
 
-        private void Dispatch(
-            IntPtr data,
-            uint dataSize,
-            IntPtr context)
+        private void Dispatch(IntPtr data, uint dataSize, IntPtr context)
         {
             if (data == IntPtr.Zero || dataSize < 12) return;
             uint receiveId = unchecked((uint)Marshal.ReadInt32(data, 8));
             if (receiveId == OpenMessage)
-                SetStatus(true, "SimConnect: conectado ao Microsoft Flight Simulator.");
+                SetConnected(true);
             else if (receiveId == QuitMessage)
-                Disconnect("SimConnect: simulador encerrado; aguardando reinício.");
+                Disconnect();
         }
 
-        private void Disconnect(string newStatus)
+        private void Disconnect()
         {
             IntPtr current = connection;
             connection = IntPtr.Zero;
             if (current != IntPtr.Zero)
                 NativeMethods.SimConnect_Close(current);
-            if (newStatus != null) SetStatus(false, newStatus);
+            SetConnected(false);
         }
 
-        private void SetStatus(bool isConnected, string value)
+        private void SetConnected(bool value)
         {
             bool changed;
             lock (sync)
             {
-                changed = connected != isConnected ||
-                          !string.Equals(status, value, StringComparison.Ordinal);
-                connected = isConnected;
-                status = value;
+                changed = connected != value;
+                connected = value;
             }
-
             if (changed) StatusChanged?.Invoke();
         }
 
@@ -165,7 +135,6 @@ namespace FSChecklist.Integrations.SimConnect
                 disposed = true;
                 current = worker;
             }
-
             stopSignal.Set();
             if (current != null && current != Thread.CurrentThread)
                 current.Join(TimeSpan.FromSeconds(2));
@@ -176,9 +145,7 @@ namespace FSChecklist.Integrations.SimConnect
         {
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
             internal delegate void DispatchProc(
-                IntPtr data,
-                uint dataSize,
-                IntPtr context);
+                IntPtr data, uint dataSize, IntPtr context);
 
             [DllImport("SimConnect.dll", CharSet = CharSet.Ansi)]
             internal static extern int SimConnect_Open(
