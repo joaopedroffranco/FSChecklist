@@ -25,5 +25,5 @@
   <msix xmlns="urn:schemas-microsoft-com:msix.v1"
         publisher="CN=FSChecklist Local"
         packageName="FSChecklist.Local"
-        applicationId="FSChecklist" />
+        applicationId="FSChecklistCopilot" />
 </assembly>

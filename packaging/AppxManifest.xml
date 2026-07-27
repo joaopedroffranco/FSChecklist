@@ -9,7 +9,7 @@
   <Identity
     Name="FSChecklist.Local"
     Publisher="CN=FSChecklist Local"
-    Version="1.0.0.1"
+    Version="1.0.0.3"
     ProcessorArchitecture="neutral" />
 
   <Properties>
@@ -39,7 +39,7 @@
 
   <Applications>
     <Application
-      Id="FSChecklist"
+      Id="FSChecklistCopilot"
       Executable="FSChecklist.exe"
       uap10:TrustLevel="mediumIL"
       uap10:RuntimeBehavior="win32App">
@@ -49,8 +49,8 @@
         DisplayName="FSChecklist"
         Description="Assistente de checklist para simulacao de voo"
         BackgroundColor="transparent"
-        Square150x150Logo="Assets\Logo.png"
-        Square44x44Logo="Assets\Logo.png" />
+        Square150x150Logo="Assets\Square150Logo.png"
+        Square44x44Logo="Assets\Square44Logo.png" />
     </Application>
   </Applications>
 </Package>
