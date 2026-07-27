@@ -8,7 +8,7 @@ $dotnet = if (Test-Path $localDotnet) {
 } else {
     (Get-Command dotnet -ErrorAction Stop).Source
 }
-$project = Join-Path $PSScriptRoot 'src\FSChecklist\FSChecklist.csproj'
+$project = Join-Path $PSScriptRoot 'src\FSChecklist.csproj'
 $outputDirectory = Join-Path $PSScriptRoot 'dist'
 $output = Join-Path $outputDirectory 'FSChecklist.exe'
 $publishDirectory = Join-Path $PSScriptRoot '.build-output'
@@ -43,9 +43,7 @@ $publishedExecutable = Join-Path $publishDirectory 'FSChecklist.exe'
 try {
     Copy-Item $publishedExecutable $output -Force -ErrorAction Stop
 } catch {
-    $output = Join-Path $outputDirectory 'FSChecklist-new.exe'
-    Copy-Item $publishedExecutable $output -Force
-    Write-Warning 'FSChecklist.exe esta aberto; o novo build foi salvo como FSChecklist-new.exe.'
+    throw 'Nao foi possivel sobrescrever dist\FSChecklist.exe. Feche o aplicativo e execute o build novamente.'
 }
 
 Copy-Item (Join-Path $PSScriptRoot 'checklists\*.json') $checklistOutput -Force

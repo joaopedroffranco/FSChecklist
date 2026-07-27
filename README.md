@@ -96,7 +96,7 @@ do projeto.
 O código C# está organizado por responsabilidade:
 
 ```text
-src/FSChecklist/
+src/
 ├── Program.cs
 ├── Domain/Checklists/
 │   ├── ChecklistModels.cs
