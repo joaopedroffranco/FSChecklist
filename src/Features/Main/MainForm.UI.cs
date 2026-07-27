@@ -7,14 +7,18 @@ namespace FSChecklist.Features.Main
 {
     internal sealed partial class MainForm
     {
-        private readonly Color background = Color.FromArgb(16, 20, 27);
-        private readonly Color panelColor = Color.FromArgb(24, 32, 43);
-        private readonly Color muted = Color.FromArgb(158, 171, 188);
-        private readonly Color primary = Color.FromArgb(35, 116, 225);
-        private readonly Color danger = Color.FromArgb(216, 75, 85);
-        private readonly Color success = Color.FromArgb(94, 211, 155);
-        private readonly Color warning = Color.FromArgb(255, 202, 88);
-        private readonly Color disabledButton = Color.FromArgb(55, 64, 76);
+        private readonly Color background = Color.FromArgb(13, 20, 29);
+        private readonly Color panelColor = Color.FromArgb(23, 35, 49);
+        private readonly Color textPrimary = Color.FromArgb(242, 246, 250);
+        private readonly Color muted = Color.FromArgb(158, 173, 189);
+        private readonly Color primary = Color.FromArgb(47, 129, 247);
+        private readonly Color success = Color.FromArgb(88, 214, 155);
+        private readonly Color warning = Color.FromArgb(246, 200, 95);
+        private readonly Color danger = Color.FromArgb(239, 100, 109);
+        private readonly Color borderColor = Color.FromArgb(52, 68, 86);
+        private readonly Color currentItemBackground = Color.FromArgb(32, 48, 64);
+        private readonly Color disabledButton = Color.FromArgb(59, 70, 84);
+        private readonly Color disabledText = Color.FromArgb(125, 136, 150);
         private readonly ToolTip actionToolTip = new ToolTip();
 
         private readonly ComboBox aircraftBox = new ComboBox();
@@ -45,7 +49,7 @@ namespace FSChecklist.Features.Main
         {
             Text = "FSChecklist";
             BackColor = background;
-            ForeColor = Color.White;
+            ForeColor = textPrimary;
             Font = new Font("Segoe UI", 10F);
             ClientSize = new Size(650, 920);
             MinimumSize = new Size(630, 890);
@@ -62,6 +66,8 @@ namespace FSChecklist.Features.Main
             aircraftTitle.SetBounds(25, 14, 180, 20);
             aircraftBox.SetBounds(25, 33, 180, 38);
             aircraftBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            aircraftBox.BackColor = panelColor;
+            aircraftBox.ForeColor = textPrimary;
             aircraftBox.DrawMode = DrawMode.OwnerDrawFixed;
             aircraftBox.ItemHeight = 32;
             aircraftBox.DrawItem += DrawComboBoxItem;
@@ -75,6 +81,8 @@ namespace FSChecklist.Features.Main
             checklistTitle.SetBounds(215, 14, 205, 20);
             checklistBox.SetBounds(215, 33, 205, 38);
             checklistBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            checklistBox.BackColor = panelColor;
+            checklistBox.ForeColor = textPrimary;
             checklistBox.DrawMode = DrawMode.OwnerDrawFixed;
             checklistBox.ItemHeight = 32;
             checklistBox.DrawItem += DrawComboBoxItem;
@@ -112,8 +120,8 @@ namespace FSChecklist.Features.Main
             stateLabel.Anchor = AnchorStyles.Top | AnchorStyles.Right;
 
             checklistNameLabel.Text = "CHECKLIST";
-            checklistNameLabel.ForeColor = Color.White;
-            checklistNameLabel.BackColor = Color.FromArgb(20, 26, 35);
+            checklistNameLabel.ForeColor = textPrimary;
+            checklistNameLabel.BackColor = background;
             checklistNameLabel.BorderStyle = BorderStyle.FixedSingle;
             checklistNameLabel.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
             checklistNameLabel.TextAlign = ContentAlignment.MiddleCenter;
@@ -148,7 +156,7 @@ namespace FSChecklist.Features.Main
                 AnchorStyles.Left | AnchorStyles.Right;
 
             heardLabel.Text = localizer.Get("WaitingStart");
-            heardLabel.ForeColor = Color.FromArgb(169, 183, 200);
+            heardLabel.ForeColor = muted;
             heardLabel.TextAlign = ContentAlignment.MiddleLeft;
             heardLabel.SetBounds(20, 716, 555, 28);
             heardLabel.Anchor =
@@ -207,9 +215,9 @@ namespace FSChecklist.Features.Main
             var comboBox = (ComboBox)sender;
             bool selected = (args.State & DrawItemState.Selected) != 0;
             using (var backgroundBrush = new SolidBrush(
-                selected ? primary : Color.White))
+                selected ? primary : panelColor))
             using (var textBrush = new SolidBrush(
-                selected ? Color.White : Color.FromArgb(30, 35, 42)))
+                textPrimary))
             {
                 args.Graphics.FillRectangle(backgroundBrush, args.Bounds);
                 args.Graphics.DrawString(
@@ -233,8 +241,8 @@ namespace FSChecklist.Features.Main
             button.Enabled = enabled;
             button.BackColor = enabled ? activeColor : disabledButton;
             button.ForeColor = enabled
-                ? Color.White
-                : Color.FromArgb(125, 136, 150);
+                ? textPrimary
+                : disabledText;
         }
 
         private void UpdateFooterLayout()
@@ -254,8 +262,8 @@ namespace FSChecklist.Features.Main
         {
             var button = (Button)sender;
             Color color = button.Enabled
-                ? Color.White
-                : Color.FromArgb(125, 136, 150);
+                ? textPrimary
+                : disabledText;
             args.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
             using (var pen = new Pen(color, 2.5F))
             {
@@ -282,8 +290,8 @@ namespace FSChecklist.Features.Main
         {
             var button = (Button)sender;
             Color color = button.Enabled
-                ? Color.White
-                : Color.FromArgb(125, 136, 150);
+                ? textPrimary
+                : disabledText;
             const int iconSize = 12;
             int x = (button.ClientSize.Width - iconSize) / 2;
             int y = (button.ClientSize.Height - iconSize) / 2;
@@ -291,14 +299,14 @@ namespace FSChecklist.Features.Main
                 args.Graphics.FillRectangle(brush, x, y, iconSize, iconSize);
         }
 
-        private static void DrawSettingsIcon(object sender, PaintEventArgs args)
+        private void DrawSettingsIcon(object sender, PaintEventArgs args)
         {
             var button = (Button)sender;
             float centerX = button.ClientSize.Width / 2F;
             float centerY = button.ClientSize.Height / 2F;
 
             args.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            using (var pen = new Pen(Color.White, 2F))
+            using (var pen = new Pen(textPrimary, 2F))
             {
                 for (int index = 0; index < 8; index++)
                 {
@@ -356,11 +364,11 @@ namespace FSChecklist.Features.Main
             label.BackColor = Color.Transparent;
         }
 
-        private static void ConfigureButton(Button button, string text, Color color)
+        private void ConfigureButton(Button button, string text, Color color)
         {
             button.Text = text;
             button.BackColor = color;
-            button.ForeColor = Color.White;
+            button.ForeColor = textPrimary;
             button.FlatStyle = FlatStyle.Flat;
             button.FlatAppearance.BorderSize = 0;
             button.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);

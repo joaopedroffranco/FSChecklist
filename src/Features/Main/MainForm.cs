@@ -239,7 +239,7 @@ namespace FSChecklist.Features.Main
                 speechRecognition.IsReady
                     ? localizer.Get("MicrophoneOff")
                     : localizer.Get("SpeechUnavailable"),
-                System.Drawing.Color.FromArgb(31, 43, 58),
+                panelColor,
                 muted);
             RefreshPreviewItems(checklist);
         }
@@ -293,7 +293,7 @@ namespace FSChecklist.Features.Main
             SetMicrophoneStatus(
                 localizer.Get("CopilotSpeaking"),
                 success,
-                System.Drawing.Color.White);
+                textPrimary);
             SetState(localizer.Get("Callout"), primary);
 
             speechRecognition.SetAcceptedResponses(
@@ -431,7 +431,7 @@ namespace FSChecklist.Features.Main
             var row = new Panel
             {
                 BackColor = current
-                    ? System.Drawing.Color.FromArgb(32, 47, 64)
+                    ? currentItemBackground
                     : panelColor,
                 Height = 56,
                 Width = Math.Max(100, checklistItemsPanel.ClientSize.Width - 4),
@@ -452,8 +452,8 @@ namespace FSChecklist.Features.Main
             {
                 Text = item.Callout,
                 ForeColor = completed
-                    ? System.Drawing.Color.FromArgb(125, 143, 163)
-                    : current ? System.Drawing.Color.White : muted,
+                    ? muted
+                    : current ? textPrimary : muted,
                 Font = completed
                     ? completedItemFont
                     : current ? currentItemFont : pendingItemFont,
@@ -484,7 +484,7 @@ namespace FSChecklist.Features.Main
 
             var separator = new Panel
             {
-                BackColor = System.Drawing.Color.FromArgb(55, 67, 82)
+                BackColor = borderColor
             };
             separator.SetBounds(0, 55, row.Width, 1);
             separator.Anchor =
@@ -540,7 +540,7 @@ namespace FSChecklist.Features.Main
                         SetMicrophoneStatus(
                             localizer.Get("SoundDetectedContinue"),
                             success,
-                            System.Drawing.Color.White);
+                            textPrimary);
                         break;
                     case SpeechListeningState.Processing:
                         SetState(localizer.Get("ProcessingSpeech"), warning);
@@ -716,7 +716,7 @@ namespace FSChecklist.Features.Main
 
             SetMicrophoneStatus(
                 localizer.Get("MicrophoneOff"),
-                System.Drawing.Color.FromArgb(31, 43, 58),
+                panelColor,
                 muted);
             RefreshStatus();
         }
@@ -779,7 +779,7 @@ namespace FSChecklist.Features.Main
                 speechRecognition.IsReady
                     ? localizer.Get("MicrophoneOff")
                     : localizer.Get("SpeechUnavailable"),
-                System.Drawing.Color.FromArgb(31, 43, 58),
+                panelColor,
                 muted);
         }
 
@@ -822,7 +822,7 @@ namespace FSChecklist.Features.Main
             SetMicrophoneStatus(
                 localizer.Get("MicrophoneListening"),
                 success,
-                System.Drawing.Color.White);
+                textPrimary);
             stateLabel.Text = localizer.Get("Listening");
             stateLabel.ForeColor = success;
         }
@@ -835,7 +835,7 @@ namespace FSChecklist.Features.Main
             microphoneStatusLabel.Text = text;
             microphoneStatusLabel.BackColor = System.Drawing.Color.Transparent;
             microphoneStatusLabel.ForeColor =
-                backColor == System.Drawing.Color.FromArgb(31, 43, 58)
+                backColor == panelColor
                     ? foreColor
                     : backColor;
         }
