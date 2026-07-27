@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace FSChecklist.Features.SpeechRecognition
@@ -52,6 +53,7 @@ namespace FSChecklist.Features.SpeechRecognition
             ListeningStateChanged;
         event EventHandler RecognitionCompleted;
 
+        void SetAcceptedResponses(IReadOnlyList<string> responses);
         Task InitializeAsync();
         Task StartAsync();
         Task StopAsync();

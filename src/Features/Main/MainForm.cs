@@ -296,6 +296,8 @@ namespace FSChecklist.Features.Main
                 System.Drawing.Color.White);
             SetState(localizer.Get("Callout"), primary);
 
+            speechRecognition.SetAcceptedResponses(
+                session.AcceptedResponses);
             Task<SpeechRecognizedEventArgs> recognitionTask =
                 speechRecognition.RecognizeOnceAsync();
             await speechSynthesis.SpeakAsync(item.Callout);
@@ -312,10 +314,7 @@ namespace FSChecklist.Features.Main
 
             try
             {
-                SpeechRecognizedEventArgs response =
-                    await recognitionTask;
-                if (checklistRunning && awaitingResponse)
-                    await HandleSpeechRecognizedAsync(response);
+                await ListenForResponseAsync(recognitionTask);
             }
             catch (OperationCanceledException)
             {
@@ -328,6 +327,36 @@ namespace FSChecklist.Features.Main
                     localizer.Get("RecognitionFailure"),
                     error);
                 EndChecklistRun();
+            }
+        }
+
+        private async Task ListenForResponseAsync(
+            Task<SpeechRecognizedEventArgs> recognitionTask)
+        {
+            Task<SpeechRecognizedEventArgs> pendingRecognition =
+                recognitionTask;
+
+            while (checklistRunning && awaitingResponse)
+            {
+                SpeechRecognizedEventArgs response =
+                    await pendingRecognition;
+                if (!checklistRunning || !awaitingResponse) return;
+
+                bool weakUnmatchedResult =
+                    !session.CanConfirm(response.Text) &&
+                    (string.IsNullOrWhiteSpace(response.Text) ||
+                     response.Confidence == RecognitionConfidence.Low ||
+                     response.Confidence == RecognitionConfidence.Rejected);
+
+                if (!weakUnmatchedResult)
+                {
+                    await HandleSpeechRecognizedAsync(response);
+                    return;
+                }
+
+                heardLabel.Text = localizer.Get("WaitingReadback");
+                ShowListeningStatus();
+                pendingRecognition = speechRecognition.RecognizeOnceAsync();
             }
         }
 
@@ -484,7 +513,8 @@ namespace FSChecklist.Features.Main
                 if (!checklistRunning ||
                     !awaitingResponse ||
                     processingResponse ||
-                    string.IsNullOrWhiteSpace(args.Text))
+                    string.IsNullOrWhiteSpace(args.Text) ||
+                    !session.CanConfirm(args.Text))
                     return;
 
                 SetState(localizer.Get("SpeechDetected"), success);

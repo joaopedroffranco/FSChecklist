@@ -68,7 +68,7 @@ namespace FSChecklist.Features.Checklist
             return true;
         }
 
-        public bool TryConfirm(string spokenText)
+        public bool CanConfirm(string spokenText)
         {
             ChecklistItem item = CurrentItem;
             if (item == null) return false;
@@ -91,8 +91,14 @@ namespace FSChecklist.Features.Checklist
                 }
             }
 
-            if (matched) ItemIndex++;
             return matched;
+        }
+
+        public bool TryConfirm(string spokenText)
+        {
+            if (!CanConfirm(spokenText)) return false;
+            ItemIndex++;
+            return true;
         }
 
         public bool ForceConfirm()

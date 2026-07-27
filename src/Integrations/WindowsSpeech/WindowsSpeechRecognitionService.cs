@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,6 +21,7 @@ namespace FSChecklist.Integrations.WindowsSpeech
         private Language language;
         private SpeechRecognizer recognizer;
         private IAsyncOperation<SpeechRecognitionResult> activeRecognition;
+        private string[] acceptedResponses = Array.Empty<string>();
         private bool started;
 
         public bool IsReady { get; private set; }
@@ -37,6 +39,17 @@ namespace FSChecklist.Integrations.WindowsSpeech
         {
             this.languageTag = languageTag;
             this.localizer = localizer;
+        }
+
+        public void SetAcceptedResponses(IReadOnlyList<string> responses)
+        {
+            acceptedResponses = responses == null
+                ? Array.Empty<string>()
+                : responses
+                    .Where(response => !string.IsNullOrWhiteSpace(response))
+                    .Select(response => response.Trim())
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToArray();
         }
 
         public async Task InitializeAsync()
@@ -146,8 +159,20 @@ namespace FSChecklist.Integrations.WindowsSpeech
                 TimeSpan.FromSeconds(30);
             recognizer.Timeouts.EndSilenceTimeout =
                 TimeSpan.FromMilliseconds(500);
-            recognizer.Constraints.Add(new SpeechRecognitionTopicConstraint(
-                SpeechRecognitionScenario.Dictation, "pilot-response"));
+            if (acceptedResponses.Length > 0)
+            {
+                recognizer.Constraints.Add(
+                    new SpeechRecognitionListConstraint(
+                        acceptedResponses,
+                        "pilot-response"));
+            }
+            else
+            {
+                recognizer.Constraints.Add(
+                    new SpeechRecognitionTopicConstraint(
+                        SpeechRecognitionScenario.Dictation,
+                        "pilot-response"));
+            }
 
             SpeechRecognitionCompilationResult compilation =
                 await recognizer.CompileConstraintsAsync();

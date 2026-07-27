@@ -150,7 +150,7 @@ namespace FSChecklist.Features.Main
             heardLabel.Text = localizer.Get("WaitingStart");
             heardLabel.ForeColor = Color.FromArgb(169, 183, 200);
             heardLabel.TextAlign = ContentAlignment.MiddleLeft;
-            heardLabel.SetBounds(20, 748, 455, 32);
+            heardLabel.SetBounds(20, 716, 555, 28);
             heardLabel.Anchor =
                 AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
 
@@ -160,9 +160,11 @@ namespace FSChecklist.Features.Main
             microphoneStatusLabel.Font =
                 new Font("Segoe UI", 9F, FontStyle.Bold);
             microphoneStatusLabel.TextAlign = ContentAlignment.MiddleLeft;
-            microphoneStatusLabel.SetBounds(20, 716, 555, 28);
+            microphoneStatusLabel.SetBounds(20, 748, 455, 42);
             microphoneStatusLabel.Anchor =
                 AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            heardLabel.TextChanged += (_, __) => UpdateFooterLayout();
+            UpdateFooterLayout();
 
             centerPanel.Controls.AddRange(new Control[]
             {
@@ -233,6 +235,19 @@ namespace FSChecklist.Features.Main
             button.ForeColor = enabled
                 ? Color.White
                 : Color.FromArgb(125, 136, 150);
+        }
+
+        private void UpdateFooterLayout()
+        {
+            bool showHeardMessage =
+                !string.IsNullOrWhiteSpace(heardLabel.Text);
+            heardLabel.Visible = showHeardMessage;
+
+            int listBottom = showHeardMessage
+                ? heardLabel.Top - 8
+                : microphoneStatusLabel.Top - 8;
+            checklistItemsPanel.Height =
+                listBottom - checklistItemsPanel.Top;
         }
 
         private void DrawCheckIcon(object sender, PaintEventArgs args)
