@@ -77,6 +77,20 @@ namespace FSChecklist.Features.Checklist
             return matched;
         }
 
+        public bool ForceConfirm()
+        {
+            if (CurrentItem == null) return false;
+            ItemIndex++;
+            return true;
+        }
+
+        public void End()
+        {
+            Document = null;
+            Checklist = null;
+            ItemIndex = -1;
+        }
+
         private static string NormalizeSpeech(string text)
         {
             if (string.IsNullOrWhiteSpace(text)) return string.Empty;

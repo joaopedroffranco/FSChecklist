@@ -11,6 +11,24 @@ namespace FSChecklist.Features.SpeechRecognition
         Rejected
     }
 
+    internal enum SpeechListeningState
+    {
+        Idle,
+        Listening,
+        SoundDetected,
+        Processing
+    }
+
+    internal sealed class SpeechListeningStateChangedEventArgs : EventArgs
+    {
+        public SpeechListeningState State { get; private set; }
+
+        public SpeechListeningStateChangedEventArgs(SpeechListeningState state)
+        {
+            State = state;
+        }
+    }
+
     internal sealed class SpeechRecognizedEventArgs : EventArgs
     {
         public string Text { get; private set; }
@@ -29,6 +47,8 @@ namespace FSChecklist.Features.SpeechRecognition
         string Status { get; }
 
         event EventHandler<SpeechRecognizedEventArgs> SpeechRecognized;
+        event EventHandler<SpeechListeningStateChangedEventArgs>
+            ListeningStateChanged;
         event EventHandler RecognitionCompleted;
 
         Task InitializeAsync();
