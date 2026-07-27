@@ -24,6 +24,7 @@ namespace FSChecklist.Features.Main
 
         private bool listening;
         private bool responseHandled;
+        private bool recognitionResultReceived;
         private int listeningAnimationStep;
         private string checklistStatus = string.Empty;
         private string speechStatus = "Reconhecimento: inicializando...";
@@ -82,7 +83,17 @@ namespace FSChecklist.Features.Main
             speechRecognition.SpeechRecognized += OnSpeechRecognized;
             speechRecognition.RecognitionCompleted += delegate
             {
-                RunOnUi(ResetPtt);
+                RunOnUi(delegate
+                {
+                    ResetPtt();
+                    if (!recognitionResultReceived &&
+                        session.IsActive &&
+                        !session.IsComplete)
+                    {
+                        heardLabel.Text =
+                            "Nenhuma fala reconhecida. Segure F9, fale e solte.";
+                    }
+                });
             };
 
             if (globalPushToTalk != null)
@@ -112,6 +123,9 @@ namespace FSChecklist.Features.Main
             {
                 if (globalPushToTalk != null) globalPushToTalk.Dispose();
                 listeningAnimationTimer.Dispose();
+                pendingItemFont.Dispose();
+                currentItemFont.Dispose();
+                completedItemFont.Dispose();
                 speechRecognition.Dispose();
                 speechSynthesis.Dispose();
             };
@@ -136,7 +150,7 @@ namespace FSChecklist.Features.Main
                 if (aircraftBox.Items.Count > 0)
                 {
                     aircraftBox.SelectedIndex = 0;
-                    checklistStatus = documents.Count + " arquivo(s) carregado(s).";
+                    checklistStatus = string.Empty;
                 }
                 else
                 {
@@ -181,11 +195,13 @@ namespace FSChecklist.Features.Main
             if (!session.IsActive) return;
             if (session.IsComplete)
             {
+                checklistNameLabel.Text = session.Checklist.name.ToUpperInvariant();
                 challengeLabel.Text = session.Checklist.name + " completa";
                 expectedLabel.Text = "Todos os itens foram confirmados.";
                 progressLabel.Text = session.ItemCount + " de " + session.ItemCount;
                 SetState("COMPLETA", success);
                 heardLabel.Text = "Checklist completa";
+                RefreshChecklistItems();
                 speechSynthesis.Speak(string.IsNullOrWhiteSpace(
                     session.Checklist.completedCallout)
                     ? session.Checklist.name + " checklist complete"
@@ -194,6 +210,7 @@ namespace FSChecklist.Features.Main
             }
 
             ChecklistItem item = session.CurrentItem;
+            checklistNameLabel.Text = session.Checklist.name.ToUpperInvariant();
             challengeLabel.Text = item.Callout;
             bool acceptsAny = session.Document.rules != null &&
                               session.Document.rules.acceptAnyAnswer;
@@ -204,7 +221,65 @@ namespace FSChecklist.Features.Main
                 "Item " + (session.ItemIndex + 1) + " de " + session.ItemCount;
             SetState("PENDENTE", warning);
             heardLabel.Text = "Segure o botao ou F9 para responder";
+            RefreshChecklistItems();
             speechSynthesis.Speak(item.Callout);
+        }
+
+        private void RefreshChecklistItems()
+        {
+            checklistItemsPanel.SuspendLayout();
+            while (checklistItemsPanel.Controls.Count > 0)
+                checklistItemsPanel.Controls[0].Dispose();
+
+            for (int index = 0; index < session.ItemCount; index++)
+            {
+                ChecklistItem item =
+                    ChecklistItem.FromJson(session.Checklist.items[index]);
+                bool completed = index < session.ItemIndex;
+                bool current = !session.IsComplete && index == session.ItemIndex;
+
+                var row = new Panel
+                {
+                    BackColor = current
+                        ? System.Drawing.Color.FromArgb(31, 43, 58)
+                        : panelColor,
+                    Height = 27,
+                    Width = Math.Max(100, checklistItemsPanel.ClientSize.Width - 24),
+                    Margin = new Padding(0, 0, 0, 2)
+                };
+
+                var icon = new Label
+                {
+                    Text = completed ? "✓" : current ? "›" : string.Empty,
+                    ForeColor = completed ? success : primary,
+                    Font = currentItemFont,
+                    TextAlign = System.Drawing.ContentAlignment.MiddleCenter,
+                    BackColor = System.Drawing.Color.Transparent
+                };
+                icon.SetBounds(4, 2, 24, 23);
+
+                var text = new Label
+                {
+                    Text = item.Callout,
+                    ForeColor = completed
+                        ? System.Drawing.Color.FromArgb(125, 143, 163)
+                        : current ? System.Drawing.Color.White : muted,
+                    Font = completed
+                        ? completedItemFont
+                        : current ? currentItemFont : pendingItemFont,
+                    TextAlign = System.Drawing.ContentAlignment.MiddleLeft,
+                    AutoEllipsis = true,
+                    BackColor = System.Drawing.Color.Transparent
+                };
+                text.SetBounds(32, 2, row.Width - 40, 23);
+                text.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+
+                row.Controls.Add(icon);
+                row.Controls.Add(text);
+                checklistItemsPanel.Controls.Add(row);
+            }
+
+            checklistItemsPanel.ResumeLayout();
         }
 
         private async void StartListening()
@@ -215,6 +290,7 @@ namespace FSChecklist.Features.Main
 
             listening = true;
             responseHandled = false;
+            recognitionResultReceived = false;
             speechSynthesis.Cancel();
             SystemSounds.Beep.Play();
             listeningAnimationStep = 0;
@@ -229,7 +305,7 @@ namespace FSChecklist.Features.Main
             }
             catch (Exception error)
             {
-                speechStatus = "Microfone indisponivel: " + error.GetBaseException().Message;
+                speechStatus = "Microfone indisponivel: " + DescribeSpeechError(error);
                 ResetPtt();
                 RefreshStatus();
             }
@@ -247,8 +323,28 @@ namespace FSChecklist.Features.Main
             catch (Exception error)
             {
                 speechStatus = "Falha ao encerrar microfone: " +
-                               error.GetBaseException().Message;
+                               DescribeSpeechError(error);
                 RefreshStatus();
+            }
+        }
+
+        private static string DescribeSpeechError(Exception error)
+        {
+            Exception rootError = error.GetBaseException();
+            string errorCode = "0x" + rootError.HResult.ToString("X8");
+
+            switch (unchecked((uint)rootError.HResult))
+            {
+                case 0x80045509:
+                    return "ative o Reconhecimento de fala online em " +
+                           "Configuracoes > Privacidade e seguranca > Fala. " +
+                           "(" + errorCode + ")";
+                case 0x80070005:
+                    return "acesso negado. Libere o FSChecklist em " +
+                           "Configuracoes > Privacidade e seguranca > Microfone. " +
+                           "(" + errorCode + ")";
+                default:
+                    return rootError.Message + " (" + errorCode + ")";
             }
         }
 
@@ -257,15 +353,23 @@ namespace FSChecklist.Features.Main
             RunOnUi(delegate
             {
                 if (responseHandled) return;
-                if (args.Confidence == RecognitionConfidence.Low ||
-                    args.Confidence == RecognitionConfidence.Rejected)
+                recognitionResultReceived = true;
+                heardLabel.Text = "Ouvido: " + args.Text +
+                                  " (" + args.Confidence + ")";
+
+                bool acceptsAny = session.Document != null &&
+                                  session.Document.rules != null &&
+                                  session.Document.rules.acceptAnyAnswer;
+                if (!acceptsAny &&
+                    (args.Confidence == RecognitionConfidence.Low ||
+                     args.Confidence == RecognitionConfidence.Rejected))
                 {
                     heardLabel.Text =
-                        "Fala incerta: " + args.Text + " - tente novamente";
+                        "Fala incerta: " + args.Text +
+                        " (" + args.Confidence + ") - tente novamente";
                     return;
                 }
 
-                heardLabel.Text = "Ouvido: " + args.Text;
                 if (!session.TryConfirm(args.Text))
                 {
                     SetState("NAO CONFIRMADO", danger);

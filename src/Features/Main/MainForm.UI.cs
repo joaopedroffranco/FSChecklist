@@ -21,10 +21,18 @@ namespace FSChecklist.Features.Main
         private readonly PictureBox logoPictureBox = new PictureBox();
         private readonly Label progressLabel = new Label();
         private readonly Label stateLabel = new Label();
+        private readonly Label checklistNameLabel = new Label();
         private readonly Label challengeLabel = new Label();
         private readonly Label expectedLabel = new Label();
         private readonly Label heardLabel = new Label();
         private readonly Label statusLabel = new Label();
+        private readonly FlowLayoutPanel checklistItemsPanel = new FlowLayoutPanel();
+        private readonly Font pendingItemFont =
+            new Font("Segoe UI", 9.5F, FontStyle.Regular);
+        private readonly Font currentItemFont =
+            new Font("Segoe UI", 9.5F, FontStyle.Bold);
+        private readonly Font completedItemFont =
+            new Font("Segoe UI", 9.5F, FontStyle.Strikeout);
 
         private void BuildInterface()
         {
@@ -75,29 +83,47 @@ namespace FSChecklist.Features.Main
             stateLabel.SetBounds(480, 18, 205, 24);
             stateLabel.Anchor = AnchorStyles.Top | AnchorStyles.Right;
 
+            checklistNameLabel.Text = "CHECKLIST";
+            checklistNameLabel.ForeColor = primary;
+            checklistNameLabel.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            checklistNameLabel.SetBounds(20, 45, 665, 20);
+            checklistNameLabel.Anchor =
+                AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+
             challengeLabel.Text = "Selecione uma aeronave e uma checklist";
-            challengeLabel.Font = new Font("Segoe UI", 22F, FontStyle.Bold);
-            challengeLabel.TextAlign = ContentAlignment.MiddleCenter;
-            challengeLabel.SetBounds(30, 68, 650, 90);
+            challengeLabel.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
+            challengeLabel.TextAlign = ContentAlignment.MiddleLeft;
+            challengeLabel.SetBounds(20, 66, 665, 46);
             challengeLabel.Anchor =
-                AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+                AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
 
             expectedLabel.ForeColor = muted;
-            expectedLabel.TextAlign = ContentAlignment.MiddleCenter;
-            expectedLabel.SetBounds(30, 163, 650, 45);
+            expectedLabel.TextAlign = ContentAlignment.MiddleLeft;
+            expectedLabel.SetBounds(20, 108, 665, 28);
             expectedLabel.Anchor =
-                AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+                AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+
+            checklistItemsPanel.BackColor = panelColor;
+            checklistItemsPanel.FlowDirection = FlowDirection.TopDown;
+            checklistItemsPanel.WrapContents = false;
+            checklistItemsPanel.AutoScroll = true;
+            checklistItemsPanel.Padding = new Padding(0);
+            checklistItemsPanel.SetBounds(20, 142, 665, 110);
+            checklistItemsPanel.Anchor =
+                AnchorStyles.Top | AnchorStyles.Bottom |
+                AnchorStyles.Left | AnchorStyles.Right;
 
             heardLabel.Text = "Aguardando inicio";
             heardLabel.ForeColor = Color.FromArgb(169, 183, 200);
-            heardLabel.TextAlign = ContentAlignment.MiddleCenter;
-            heardLabel.SetBounds(30, 226, 650, 35);
+            heardLabel.TextAlign = ContentAlignment.MiddleLeft;
+            heardLabel.SetBounds(20, 258, 665, 28);
             heardLabel.Anchor =
                 AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
 
             centerPanel.Controls.AddRange(new Control[]
             {
-                progressLabel, stateLabel, challengeLabel, expectedLabel, heardLabel
+                progressLabel, stateLabel, checklistNameLabel, challengeLabel,
+                expectedLabel, checklistItemsPanel, heardLabel
             });
 
             ConfigureButton(pttButton, "SEGURE PARA FALAR - F9 GLOBAL", primary);
