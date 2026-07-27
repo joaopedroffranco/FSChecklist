@@ -37,6 +37,7 @@ namespace FSChecklist.Features.Main
         private readonly Label expectedLabel = new Label();
         private readonly Label heardLabel = new Label();
         private readonly Label statusLabel = new Label();
+        private readonly Label simulatorStatusLabel = new Label();
         private readonly FlowLayoutPanel checklistItemsPanel = new FlowLayoutPanel();
         private readonly Font pendingItemFont =
             new Font("Segoe UI", 10.5F, FontStyle.Regular);
@@ -109,14 +110,22 @@ namespace FSChecklist.Features.Main
             centerPanel.Anchor =
                 AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
 
+            simulatorStatusLabel.Text = simulator.Status;
+            simulatorStatusLabel.ForeColor = warning;
+            simulatorStatusLabel.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
+            simulatorStatusLabel.TextAlign = ContentAlignment.TopLeft;
+            simulatorStatusLabel.SetBounds(20, 14, 355, 24);
+            simulatorStatusLabel.Anchor =
+                AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+
             progressLabel.Text = localizer.Get("NoChecklistStarted");
             progressLabel.ForeColor = muted;
-            progressLabel.SetBounds(20, 14, 220, 24);
+            progressLabel.SetBounds(20, 38, 220, 24);
             stateLabel.Text = localizer.Get("Ready");
             stateLabel.ForeColor = success;
             stateLabel.Font = new Font(Font, FontStyle.Bold);
             stateLabel.TextAlign = ContentAlignment.TopRight;
-            stateLabel.SetBounds(380, 14, 195, 24);
+            stateLabel.SetBounds(380, 38, 195, 24);
             stateLabel.Anchor = AnchorStyles.Top | AnchorStyles.Right;
 
             checklistNameLabel.Text = "CHECKLIST";
@@ -125,7 +134,7 @@ namespace FSChecklist.Features.Main
             checklistNameLabel.BorderStyle = BorderStyle.FixedSingle;
             checklistNameLabel.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
             checklistNameLabel.TextAlign = ContentAlignment.MiddleCenter;
-            checklistNameLabel.SetBounds(20, 40, 555, 38);
+            checklistNameLabel.SetBounds(20, 64, 555, 38);
             checklistNameLabel.Visible = true;
             checklistNameLabel.Anchor =
                 AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
@@ -140,7 +149,7 @@ namespace FSChecklist.Features.Main
             expectedLabel.ForeColor = muted;
             expectedLabel.TextAlign = ContentAlignment.MiddleLeft;
             expectedLabel.TextAlign = ContentAlignment.MiddleCenter;
-            expectedLabel.SetBounds(20, 82, 555, 30);
+            expectedLabel.SetBounds(20, 106, 555, 30);
             expectedLabel.Anchor =
                 AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
 
@@ -150,7 +159,7 @@ namespace FSChecklist.Features.Main
             checklistItemsPanel.AutoScroll = false;
             checklistItemsPanel.BorderStyle = BorderStyle.FixedSingle;
             checklistItemsPanel.Padding = new Padding(0);
-            checklistItemsPanel.SetBounds(20, 116, 555, 592);
+            checklistItemsPanel.SetBounds(20, 140, 555, 568);
             checklistItemsPanel.Anchor =
                 AnchorStyles.Top | AnchorStyles.Bottom |
                 AnchorStyles.Left | AnchorStyles.Right;
@@ -176,7 +185,7 @@ namespace FSChecklist.Features.Main
 
             centerPanel.Controls.AddRange(new Control[]
             {
-                progressLabel, stateLabel, checklistNameLabel, challengeLabel,
+                simulatorStatusLabel, progressLabel, stateLabel, checklistNameLabel, challengeLabel,
                 expectedLabel, checklistItemsPanel, microphoneStatusLabel, heardLabel
             });
 

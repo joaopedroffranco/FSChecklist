@@ -8,8 +8,10 @@ using FSChecklist.Features.Localization;
 using FSChecklist.Features.Main;
 using FSChecklist.Features.Repository;
 using FSChecklist.Features.Settings;
+using FSChecklist.Features.Simulator;
 using FSChecklist.Features.SpeechRecognition;
 using FSChecklist.Integrations.Localization;
+using FSChecklist.Integrations.SimConnect;
 using FSChecklist.Integrations.Settings;
 using FSChecklist.Integrations.WindowsAudio;
 using FSChecklist.Integrations.WindowsInput;
@@ -57,6 +59,7 @@ namespace FSChecklist
             ISpeechRecognitionService recognition =
                 new WindowsSpeechRecognitionService("en-US", localizer);
             ISpeechSynthesisService synthesis = new WindowsSpeechSynthesisService();
+            ISimulatorConnection simulator = new SimConnectConnection();
 
             try
             {
@@ -69,7 +72,8 @@ namespace FSChecklist
                     settingsRepository,
                     settings,
                     localizer,
-                    audioInput));
+                    audioInput,
+                    simulator));
             }
             catch (Exception error)
             {

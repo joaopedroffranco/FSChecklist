@@ -26,6 +26,7 @@ advances when the response matches the checklist configuration.
 - configurable global shortcut, including key combinations;
 - Windows speech recognition with no external API key required;
 - support for multiple aircraft and checklists.
+- automatic SimConnect connection status for Microsoft Flight Simulator 2024.
 
 ## Download and install
 
@@ -57,8 +58,19 @@ If no ready-to-use version is available on the Releases page, follow the
   Windows;
 - [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0)
   if requested by Windows.
+- the official x64 `SimConnect.dll` from the MSFS 2024 SDK, copied beside
+  `FSChecklist.exe`, to enable simulator connectivity.
 
-Microsoft Flight Simulator does not need to be running to test the application.
+The application remains usable when Microsoft Flight Simulator is not running.
+It reconnects through SimConnect automatically every five seconds.
+
+## SimConnect
+
+Install the Microsoft Flight Simulator 2024 SDK from Developer Mode and copy
+the official x64 `SimConnect.dll` from its SimConnect SDK beside
+`FSChecklist.exe`. The connection indicator at the top of the checklist panel
+reports whether the simulator is connected. Voice checklists continue to work
+when SimConnect is unavailable.
 
 ## Configure speech recognition
 

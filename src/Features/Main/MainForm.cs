@@ -12,6 +12,7 @@ using FSChecklist.Features.Input;
 using FSChecklist.Features.Localization;
 using FSChecklist.Features.Repository;
 using FSChecklist.Features.Settings;
+using FSChecklist.Features.Simulator;
 using FSChecklist.Features.SpeechRecognition;
 
 namespace FSChecklist.Features.Main
@@ -25,6 +26,7 @@ namespace FSChecklist.Features.Main
         private readonly IAppSettingsRepository settingsRepository;
         private readonly IAppLocalizer localizer;
         private readonly IAudioInputDeviceService audioInput;
+        private readonly ISimulatorConnection simulator;
         private readonly string hotkeyError;
         private readonly ChecklistSession session = new ChecklistSession();
         private readonly List<ChecklistDocument> documents = new List<ChecklistDocument>();
@@ -48,7 +50,8 @@ namespace FSChecklist.Features.Main
             IAppSettingsRepository settingsRepository,
             AppSettings settings,
             IAppLocalizer localizer,
-            IAudioInputDeviceService audioInput)
+            IAudioInputDeviceService audioInput,
+            ISimulatorConnection simulator)
         {
             this.repository = repository;
             this.speechRecognition = speechRecognition;
@@ -59,12 +62,15 @@ namespace FSChecklist.Features.Main
             this.settings = settings;
             this.localizer = localizer;
             this.audioInput = audioInput;
+            this.simulator = simulator;
             speechStatus = localizer.Get("SpeechInitializing");
             UpdateHotkeyStatus();
 
             BuildInterface();
             WireEvents();
             LoadChecklists();
+            simulator.StatusChanged += OnSimulatorStatusChanged;
+            simulator.Start();
 
             Shown += async delegate
             {
@@ -157,7 +163,18 @@ namespace FSChecklist.Features.Main
                 if (Icon != null) Icon.Dispose();
                 speechRecognition.Dispose();
                 speechSynthesis.Dispose();
+                simulator.Dispose();
             };
+        }
+
+        private void OnSimulatorStatusChanged()
+        {
+            RunOnUi(delegate
+            {
+                simulatorStatusLabel.Text = simulator.Status;
+                simulatorStatusLabel.ForeColor =
+                    simulator.IsConnected ? success : warning;
+            });
         }
 
         private void LoadChecklists()
