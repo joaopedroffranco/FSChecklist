@@ -1,54 +1,114 @@
 # FSChecklist
 
-Assistente local de checklist por voz para o Microsoft Flight Simulator 2024.
-Ele simula o fluxo *challenge and response*: o copiloto lê o item, o piloto
-responde por push-to-talk, e o software só avança quando a resposta corresponde
-ao JSON.
+<img src="assets/fschecklist-logo.png" alt="FSChecklist logo" width="160">
 
-## Executar o aplicativo
+A voice-driven checklist assistant for Microsoft Flight Simulator 2024.
 
-Para usar a versao compilada, abra `dist\FSChecklist.exe`.
+FSChecklist reproduces the aviation *challenge-and-response* flow: the copilot
+reads each item, the pilot answers through the microphone, and the application
+advances when the response matches the checklist configuration.
 
-Para gerar ou atualizar o executavel:
+> This project is intended for flight simulation only. Do not use it in
+> real-world aviation operations.
 
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\build.ps1
-```
+## Features
 
-O build usa o compilador .NET Framework que ja acompanha o Windows e copia as
-checklists para `dist\checklists`.
+- Brazilian Portuguese voice callouts and speech recognition;
+- JSON-based checklists;
+- global `F9` shortcut, even while the simulator is in the foreground;
+- visual list of pending, current, and completed items;
+- manual item confirmation;
+- local voice processing on the computer;
+- support for multiple aircraft and checklists.
 
-No aplicativo compilado, `F9` funciona como push-to-talk global: pressione para
-iniciar a escuta e solte para enviar, mesmo quando o MSFS ou outra janela estiver
-em foco. A tecla continua sendo encaminhada normalmente aos demais aplicativos.
+## Download and install
 
-## Executar a versao PowerShell
+### Ready-to-use version
 
-Requisitos:
+1. Open the
+   [Releases](https://github.com/joaopedroffranco/FSChecklist/releases) page.
+2. Select the latest version.
+3. Under **Assets**, download the file provided for Windows.
+4. If the download is a `.zip` file, extract all its contents into a folder.
+5. Run `FSChecklist.exe`.
 
-- Windows 10 ou 11
-- Windows PowerShell 5.1
-- pacote de reconhecimento de voz em português (Brasil) instalado no Windows
-- microfone configurado como dispositivo de entrada padrão
+Keep the `checklists` folder next to the executable. If Windows SmartScreen
+appears, verify that the file came from this repository before selecting
+**More info → Run anyway**.
 
-Dê dois cliques em `Start-FSChecklist.cmd`. Se o Windows bloquear o arquivo,
-use **Propriedades → Desbloquear**.
+If no ready-to-use version is available on the Releases page, follow the
+[build instructions](#build-from-source).
 
-1. Escolha a aeronave e a checklist.
-2. Clique em **INICIAR**.
-3. Segure o botão azul ou `F9`, fale a resposta e solte.
-4. Se a resposta não estiver no JSON, o item permanece pendente.
+## Requirements
 
-Na versao PowerShell legada, `F9` funciona apenas com a janela em foco.
+- 64-bit Windows 10 or Windows 11;
+- a microphone configured as the Windows input device;
+- the **Portuguese (Brazil)** speech package installed in Windows;
+- [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0)
+  if requested by Windows.
 
-## Adicionar checklists
+Microsoft Flight Simulator does not need to be running to test the application.
 
-Coloque arquivos `.json` em `checklists/`. O aplicativo nunca cria itens, muda
-a ordem ou usa IA para decidir o próximo passo.
+## Configure speech recognition
 
-O formato original do projeto também é aceito. Quando `items` contém apenas
-textos e `rules.acceptAnyAnswer` é `true`, qualquer resposta reconhecida confirma
-o item:
+On Windows 11:
+
+1. Open **Settings → Time & language → Language & region**.
+2. Add **Portuguese (Brazil)** and install its speech feature.
+3. Open **Settings → Privacy & security → Microphone**.
+4. Allow microphone access for desktop applications.
+5. Under **Privacy & security → Speech**, enable speech recognition.
+
+The names of these settings may be slightly different on Windows 10.
+
+## How to use
+
+1. Open `FSChecklist.exe`.
+2. Select an aircraft and a checklist.
+3. Click **START** or press `F9`.
+4. Wait for the copilot to read the item.
+5. Answer the callout through the microphone.
+6. Follow the progress in the checklist panel.
+
+The microphone remains active while the checklist is running. The copilot's
+voice is ignored while a callout is being played.
+
+Available controls:
+
+- **✓ — Force check:** manually confirms the current item;
+- **■ — Finish:** stops the checklist without confirming the remaining items.
+
+A missing, uncertain, or mismatched response keeps the current item pending.
+
+## Troubleshooting
+
+### The microphone does not recognize my voice
+
+- confirm that the correct microphone is the Windows default input device;
+- verify microphone permissions for desktop applications;
+- install the Portuguese (Brazil) speech package;
+- speak only after the status indicates that the microphone is listening.
+
+### F9 does not work
+
+- check whether the interface reports that global `F9` is active;
+- close any other application that may be intercepting the key;
+- use the **START** button as an alternative.
+
+### The application does not open
+
+- extract the `.zip` file before running the application;
+- install the .NET 8 Desktop Runtime;
+- do not remove the `checklists` folder;
+- open an issue with a screenshot and the error message.
+
+## Add checklists
+
+Place `.json` files inside the `checklists` folder. Item content and order are
+controlled exclusively by the file: the application does not invent, reorder,
+or skip steps using AI.
+
+Checklist that accepts any recognized response:
 
 ```json
 {
@@ -64,7 +124,7 @@ o item:
 }
 ```
 
-Para exigir respostas específicas, use itens estruturados:
+Checklist with specific responses:
 
 ```json
 {
@@ -88,51 +148,52 @@ Para exigir respostas específicas, use itens estruturados:
 }
 ```
 
-O arquivo `checklists/a320.json` contém a checklist fornecida pelo proprietário
-do projeto.
+See `checklists/a320.json` for a complete example.
 
-## Arquitetura
+## Build from source
 
-O código C# está organizado por responsabilidade:
+Development requirements:
 
-```text
-src/
-├── Program.cs
-├── Domain/Checklists/
-│   ├── ChecklistModels.cs
-│   └── ChecklistItem.cs
-├── Features/
-│   ├── Main/
-│   │   ├── MainForm.cs
-│   │   └── MainForm.UI.cs
-│   ├── Checklist/ChecklistSession.cs
-│   ├── Repository/
-│   │   ├── IChecklistRepository.cs
-│   │   └── JsonChecklistRepository.cs
-│   ├── SpeechRecognition/
-│   │   ├── ISpeechRecognitionService.cs
-│   │   └── ISpeechSynthesisService.cs
-│   └── Input/IGlobalPushToTalk.cs
-└── Integrations/
-    ├── WindowsSpeech/
-    │   ├── WindowsSpeechRecognitionService.cs
-    │   └── WindowsSpeechSynthesisService.cs
-    └── WindowsInput/WindowsGlobalPushToTalk.cs
+- [Git](https://git-scm.com/);
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0);
+- 64-bit Windows 10 or Windows 11.
+
+Clone and publish the project:
+
+```powershell
+git clone https://github.com/joaopedroffranco/FSChecklist.git
+cd FSChecklist
+dotnet restore .\src\FSChecklist.csproj --configfile .\NuGet.Config
+dotnet publish .\src\FSChecklist.csproj `
+  --configuration Release `
+  --runtime win-x64 `
+  --self-contained false `
+  --output .\dist
+New-Item .\dist\checklists -ItemType Directory -Force
+Copy-Item .\checklists\*.json .\dist\checklists -Force
 ```
 
-- `Domain` contém somente os modelos centrais.
-- `Features` contém regras e contratos da aplicação.
-- `Integrations` contém código específico do Windows.
-- `MainForm.UI.cs` contém apenas a construção visual da tela.
-- `MainForm.cs` coordena os módulos sem conhecer detalhes de JSON ou WinRT.
+The executable will be created at `dist\FSChecklist.exe`.
 
-## Decisões de segurança
+The `build.ps1` script is the maintainer's distribution workflow. It also signs
+the executable, so it requires the Windows SDK and a local
+`CN=FSChecklist Local` certificate.
 
-- sequência e conteúdo são controlados exclusivamente pelo JSON;
-- resposta não reconhecida não avança;
-- baixa confiança do reconhecimento pede nova tentativa;
-- a tela sempre mostra o item atual, a resposta esperada e o progresso;
-- botão **VOLTAR** permite corrigir o item anterior;
-- todo o áudio permanece local no computador.
+## Privacy and safety
 
-Este projeto é para simulação. Não deve ser usado em operações aeronáuticas reais.
+- audio is processed locally by the Windows speech engine;
+- unrecognized responses do not advance the checklist;
+- the interface always displays the current item and progress;
+- checklist content comes from JSON files;
+- the application does not replace official aviation procedures or
+  documentation.
+
+## Contributing
+
+Issues and pull requests are welcome. When reporting a problem, include:
+
+- Windows version;
+- aircraft and checklist used;
+- error message;
+- steps to reproduce;
+- a screenshot, when possible.
