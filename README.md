@@ -18,6 +18,10 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\build.ps1
 O build usa o compilador .NET Framework que ja acompanha o Windows e copia as
 checklists para `dist\checklists`.
 
+No aplicativo compilado, `F9` funciona como push-to-talk global: pressione para
+iniciar a escuta e solte para enviar, mesmo quando o MSFS ou outra janela estiver
+em foco. A tecla continua sendo encaminhada normalmente aos demais aplicativos.
+
 ## Executar a versao PowerShell
 
 Requisitos:
@@ -35,9 +39,7 @@ use **Propriedades → Desbloquear**.
 3. Segure o botão azul ou `F9`, fale a resposta e solte.
 4. Se a resposta não estiver no JSON, o item permanece pendente.
 
-`F9` funciona enquanto a janela do FSChecklist está em foco. Um hotkey global
-será uma evolução posterior, para não capturar teclas do simulador sem
-configuração explícita.
+Na versao PowerShell legada, `F9` funciona apenas com a janela em foco.
 
 ## Adicionar checklists
 
@@ -88,6 +90,41 @@ Para exigir respostas específicas, use itens estruturados:
 
 O arquivo `checklists/a320.json` contém a checklist fornecida pelo proprietário
 do projeto.
+
+## Arquitetura
+
+O código C# está organizado por responsabilidade:
+
+```text
+src/FSChecklist/
+├── Program.cs
+├── Domain/Checklists/
+│   ├── ChecklistModels.cs
+│   └── ChecklistItem.cs
+├── Features/
+│   ├── Main/
+│   │   ├── MainForm.cs
+│   │   └── MainForm.UI.cs
+│   ├── Checklist/ChecklistSession.cs
+│   ├── Repository/
+│   │   ├── IChecklistRepository.cs
+│   │   └── JsonChecklistRepository.cs
+│   ├── SpeechRecognition/
+│   │   ├── ISpeechRecognitionService.cs
+│   │   └── ISpeechSynthesisService.cs
+│   └── Input/IGlobalPushToTalk.cs
+└── Integrations/
+    ├── WindowsSpeech/
+    │   ├── WindowsSpeechRecognitionService.cs
+    │   └── WindowsSpeechSynthesisService.cs
+    └── WindowsInput/WindowsGlobalPushToTalk.cs
+```
+
+- `Domain` contém somente os modelos centrais.
+- `Features` contém regras e contratos da aplicação.
+- `Integrations` contém código específico do Windows.
+- `MainForm.UI.cs` contém apenas a construção visual da tela.
+- `MainForm.cs` coordena os módulos sem conhecer detalhes de JSON ou WinRT.
 
 ## Decisões de segurança
 

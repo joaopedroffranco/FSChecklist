@@ -2,35 +2,50 @@
 
 $ErrorActionPreference = 'Stop'
 
-$compiler = 'C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe'
-$speechAssembly = 'C:\Windows\Microsoft.NET\assembly\GAC_MSIL\System.Speech\v4.0_4.0.0.0__31bf3856ad364e35\System.Speech.dll'
-$source = Join-Path $PSScriptRoot 'src\FSChecklist\Program.cs'
+$localDotnet = Join-Path $PSScriptRoot '.dotnet\dotnet.exe'
+$dotnet = if (Test-Path $localDotnet) {
+    $localDotnet
+} else {
+    (Get-Command dotnet -ErrorAction Stop).Source
+}
+$project = Join-Path $PSScriptRoot 'src\FSChecklist\FSChecklist.csproj'
 $outputDirectory = Join-Path $PSScriptRoot 'dist'
 $output = Join-Path $outputDirectory 'FSChecklist.exe'
+$publishDirectory = Join-Path $PSScriptRoot '.build-output'
 $checklistOutput = Join-Path $outputDirectory 'checklists'
 
-if (-not (Test-Path $compiler)) {
-    throw "Compilador do Windows nao encontrado: $compiler"
-}
-if (-not (Test-Path $speechAssembly)) {
-    throw "Biblioteca de voz do Windows nao encontrada: $speechAssembly"
-}
-
 New-Item -ItemType Directory -Path $outputDirectory -Force | Out-Null
+New-Item -ItemType Directory -Path $publishDirectory -Force | Out-Null
 New-Item -ItemType Directory -Path $checklistOutput -Force | Out-Null
 
-& $compiler /nologo /target:winexe /platform:x64 /optimize+ `
-    /out:$output `
-    /reference:System.dll `
-    /reference:System.Core.dll `
-    /reference:System.Drawing.dll `
-    /reference:System.Windows.Forms.dll `
-    /reference:System.Web.Extensions.dll `
-    /reference:$speechAssembly `
-    $source
+$env:DOTNET_CLI_HOME = Join-Path $PSScriptRoot '.dotnet-home'
+$env:NUGET_PACKAGES = Join-Path $PSScriptRoot '.nuget\packages'
+$env:APPDATA = Join-Path $PSScriptRoot '.appdata'
+$env:DOTNET_CLI_TELEMETRY_OPTOUT = '1'
+$env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE = '1'
+New-Item -ItemType Directory -Path (Join-Path $env:DOTNET_CLI_HOME '.dotnet\tools') -Force | Out-Null
+New-Item -ItemType Directory -Path (Join-Path $env:APPDATA 'NuGet') -Force | Out-Null
+Copy-Item (Join-Path $PSScriptRoot 'NuGet.Config') `
+    (Join-Path $env:APPDATA 'NuGet\NuGet.Config') -Force
+
+& $dotnet publish $project `
+    --configuration Release `
+    --runtime win-x64 `
+    --output $publishDirectory `
+    --configfile (Join-Path $PSScriptRoot 'NuGet.Config') `
+    --nologo
 
 if ($LASTEXITCODE -ne 0) {
-    throw "Falha na compilacao: csc retornou $LASTEXITCODE"
+    throw "Falha na compilacao: dotnet retornou $LASTEXITCODE"
+}
+
+$publishedExecutable = Join-Path $publishDirectory 'FSChecklist.exe'
+try {
+    Copy-Item $publishedExecutable $output -Force -ErrorAction Stop
+} catch {
+    $output = Join-Path $outputDirectory 'FSChecklist-new.exe'
+    Copy-Item $publishedExecutable $output -Force
+    Write-Warning 'FSChecklist.exe esta aberto; o novo build foi salvo como FSChecklist-new.exe.'
 }
 
 Copy-Item (Join-Path $PSScriptRoot 'checklists\*.json') $checklistOutput -Force
