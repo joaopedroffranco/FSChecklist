@@ -1,0 +1,147 @@
+{
+  "aircraft": "Fenix A320",
+  "version": "1.0",
+  "language": "pt-BR",
+  "rules": {
+    "speakLanguage": "pt-BR",
+    "checklistLanguage": "en",
+    "onlyRespondWhenCalled": "Copiloto",
+    "acceptAnyAnswer": true,
+    "dontCorrect": true,
+    "dontComment": true,
+    "pauseCommands": ["pausa", "calma", "espera"],
+    "resumeCommands": ["continuar", "continua", "prosseguir", "segue"]
+  },
+  "checklists": [
+    {
+      "id": "before_start",
+      "name": "Before Start",
+      "next": "Start",
+      "items": [
+        "Parking Brake",
+        "Navi Lights",
+        "Fasten Seatbelts",
+        "No Smoking",
+        "Transponder"
+      ]
+    },
+    {
+      "id": "start",
+      "name": "Start",
+      "next": "Before Taxi",
+      "items": [
+        "FMC",
+        "Beacon",
+        "APU",
+        "Fuel Pump Switches",
+        "Mode Selector"
+      ]
+    },
+    {
+      "id": "before_taxi",
+      "name": "Before Taxi",
+      "next": "Taxi",
+      "items": [
+        "APU",
+        "Engine Mode Selector",
+        "Autobrake",
+        "Elevator Trim",
+        "Flight Controls",
+        "Taxi Lights"
+      ]
+    },
+    {
+      "id": "taxi",
+      "name": "Taxi",
+      "next": "Before Takeoff",
+      "items": [
+        "Takeoff Config"
+      ]
+    },
+    {
+      "id": "before_takeoff",
+      "name": "Before Takeoff",
+      "next": "After Takeoff",
+      "items": [
+        "Landing Lights",
+        "Runway Lights",
+        "Strobe",
+        "Transponder TA/RA"
+      ]
+    },
+    {
+      "id": "after_takeoff",
+      "name": "After Takeoff",
+      "next": "Cruise",
+      "items": [
+        "Runway Lights",
+        "Spoilers",
+        "Autobrake",
+        "Strobe"
+      ]
+    },
+    {
+      "id": "cruise",
+      "name": "Cruise",
+      "next": "Descent",
+      "items": [
+        "Landing Lights",
+        "Seatbelts"
+      ]
+    },
+    {
+      "id": "descent",
+      "name": "Descent",
+      "next": "Approach",
+      "items": [
+        "FMC",
+        "ATIS"
+      ]
+    },
+    {
+      "id": "approach",
+      "name": "Approach",
+      "next": "Landing",
+      "items": [
+        "Landing Lights",
+        "ILS",
+        "Seatbelts",
+        "Autobrake"
+      ]
+    },
+    {
+      "id": "landing",
+      "name": "Landing",
+      "next": "After Landing",
+      "items": [
+        "Landing Lights",
+        "Taxi Lights",
+        "Ground Spoilers",
+        "Flaps"
+      ]
+    },
+    {
+      "id": "after_landing",
+      "name": "After Landing",
+      "next": "Shutdown",
+      "items": [
+        "APU",
+        "Transponder",
+        "Taxi Lights",
+        "Runway Lights",
+        "Landing Lights"
+      ]
+    },
+    {
+      "id": "shutdown",
+      "name": "Shutdown",
+      "next": null,
+      "items": [
+        "Taxi Lights",
+        "Beacon",
+        "External Power",
+        "APU"
+      ]
+    }
+  ]
+}
