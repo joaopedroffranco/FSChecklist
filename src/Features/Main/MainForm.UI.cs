@@ -45,6 +45,7 @@ namespace FSChecklist.Features.Main
             MinimumSize = new Size(700, 570);
             StartPosition = FormStartPosition.CenterScreen;
             KeyPreview = true;
+            Icon = LoadAppIcon();
 
             logoPictureBox.Image = LoadLogo();
             logoPictureBox.SizeMode = PictureBoxSizeMode.Zoom;
@@ -170,6 +171,17 @@ namespace FSChecklist.Features.Main
                 if (stream == null) return null;
                 using (Image image = Image.FromStream(stream))
                     return new Bitmap(image);
+            }
+        }
+
+        private static Icon LoadAppIcon()
+        {
+            using (System.IO.Stream stream = typeof(MainForm).Assembly
+                .GetManifestResourceStream("FSChecklist.Assets.AppIcon.ico"))
+            {
+                if (stream == null) return null;
+                using (var icon = new Icon(stream))
+                    return (Icon)icon.Clone();
             }
         }
 

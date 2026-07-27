@@ -20,5 +20,7 @@
   <ItemGroup>
     <EmbeddedResource Include="..\assets\fschecklist-logo.png"
                       LogicalName="FSChecklist.Assets.Logo.png" />
+    <EmbeddedResource Include="..\assets\fschecklist.ico"
+                      LogicalName="FSChecklist.Assets.AppIcon.ico" />
   </ItemGroup>
 </Project>

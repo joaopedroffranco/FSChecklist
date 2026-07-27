@@ -121,6 +121,7 @@ namespace FSChecklist.Features.Main
                 pendingItemFont.Dispose();
                 currentItemFont.Dispose();
                 completedItemFont.Dispose();
+                if (Icon != null) Icon.Dispose();
                 speechRecognition.Dispose();
                 speechSynthesis.Dispose();
             };
