@@ -3,7 +3,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FSChecklist.Features.SpeechRecognition;
+using Windows.Devices.Enumeration;
 using Windows.Globalization;
+using Windows.Media.Devices;
 using Windows.Media.SpeechRecognition;
 
 namespace FSChecklist.Integrations.WindowsSpeech
@@ -19,6 +21,8 @@ namespace FSChecklist.Integrations.WindowsSpeech
         public string Status { get; private set; } = "Reconhecimento: inicializando...";
 
         public event EventHandler<SpeechRecognizedEventArgs> SpeechRecognized;
+        public event EventHandler<SpeechListeningStateChangedEventArgs>
+            ListeningStateChanged;
         public event EventHandler RecognitionCompleted;
 
         public WindowsSpeechRecognitionService(string languageTag)
@@ -38,6 +42,8 @@ namespace FSChecklist.Integrations.WindowsSpeech
                         "O Windows nao oferece reconhecimento para " + languageTag + ".");
 
                 recognizer = new SpeechRecognizer(language);
+                recognizer.Timeouts.EndSilenceTimeout =
+                    TimeSpan.FromMilliseconds(500);
                 recognizer.Constraints.Add(new SpeechRecognitionTopicConstraint(
                     SpeechRecognitionScenario.Dictation, "pilot-response"));
 
@@ -49,9 +55,12 @@ namespace FSChecklist.Integrations.WindowsSpeech
 
                 recognizer.ContinuousRecognitionSession.ResultGenerated += OnResultGenerated;
                 recognizer.ContinuousRecognitionSession.Completed += OnCompleted;
+                recognizer.StateChanged += OnStateChanged;
 
                 IsReady = true;
-                Status = "Reconhecimento " + languageTag + " pronto.";
+                string microphoneName = await GetDefaultMicrophoneNameAsync();
+                Status = "Reconhecimento " + languageTag +
+                         " pronto. Microfone: " + microphoneName + ".";
             }
             catch (Exception error)
             {
@@ -120,6 +129,55 @@ namespace FSChecklist.Integrations.WindowsSpeech
             if (handler != null) handler(this, EventArgs.Empty);
         }
 
+        private void OnStateChanged(
+            SpeechRecognizer sender,
+            SpeechRecognizerStateChangedEventArgs args)
+        {
+            EventHandler<SpeechListeningStateChangedEventArgs> handler =
+                ListeningStateChanged;
+            if (handler == null) return;
+
+            SpeechListeningState state;
+            switch (args.State)
+            {
+                case SpeechRecognizerState.Capturing:
+                    state = SpeechListeningState.Listening;
+                    break;
+                case SpeechRecognizerState.SoundStarted:
+                    state = SpeechListeningState.SoundDetected;
+                    break;
+                case SpeechRecognizerState.Processing:
+                case SpeechRecognizerState.SoundEnded:
+                    state = SpeechListeningState.Processing;
+                    break;
+                default:
+                    state = SpeechListeningState.Idle;
+                    break;
+            }
+            handler(this, new SpeechListeningStateChangedEventArgs(state));
+        }
+
+        private static async Task<string> GetDefaultMicrophoneNameAsync()
+        {
+            try
+            {
+                string deviceId = MediaDevice.GetDefaultAudioCaptureId(
+                    AudioDeviceRole.Default);
+                if (string.IsNullOrWhiteSpace(deviceId))
+                    return "nenhum dispositivo padrao";
+
+                DeviceInformation device =
+                    await DeviceInformation.CreateFromIdAsync(deviceId);
+                return string.IsNullOrWhiteSpace(device.Name)
+                    ? "dispositivo padrao"
+                    : device.Name;
+            }
+            catch
+            {
+                return "dispositivo padrao";
+            }
+        }
+
         private static RecognitionConfidence MapConfidence(
             SpeechRecognitionConfidence confidence)
         {
@@ -142,6 +200,7 @@ namespace FSChecklist.Integrations.WindowsSpeech
             {
                 recognizer.ContinuousRecognitionSession.ResultGenerated -= OnResultGenerated;
                 recognizer.ContinuousRecognitionSession.Completed -= OnCompleted;
+                recognizer.StateChanged -= OnStateChanged;
                 recognizer.Dispose();
                 recognizer = null;
             }

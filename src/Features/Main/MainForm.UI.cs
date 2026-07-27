@@ -16,8 +16,9 @@ namespace FSChecklist.Features.Main
         private readonly ComboBox aircraftBox = new ComboBox();
         private readonly ComboBox checklistBox = new ComboBox();
         private readonly Button startButton = new Button();
-        private readonly Button pttButton = new Button();
-        private readonly Button repeatButton = new Button();
+        private readonly Button forceCheckButton = new Button();
+        private readonly Button finishButton = new Button();
+        private readonly Label microphoneStatusLabel = new Label();
         private readonly PictureBox logoPictureBox = new PictureBox();
         private readonly Label progressLabel = new Label();
         private readonly Label stateLabel = new Label();
@@ -126,15 +127,25 @@ namespace FSChecklist.Features.Main
                 expectedLabel, checklistItemsPanel, heardLabel
             });
 
-            ConfigureButton(pttButton, "SEGURE PARA FALAR - F9 GLOBAL", primary);
-            pttButton.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            pttButton.SetBounds(25, 480, 545, 45);
-            pttButton.Anchor =
+            microphoneStatusLabel.Text = "MICROFONE: DESLIGADO - F9 INICIA";
+            microphoneStatusLabel.BackColor = Color.FromArgb(31, 43, 58);
+            microphoneStatusLabel.ForeColor = muted;
+            microphoneStatusLabel.Font =
+                new Font("Segoe UI", 9.5F, FontStyle.Bold);
+            microphoneStatusLabel.TextAlign = ContentAlignment.MiddleCenter;
+            microphoneStatusLabel.SetBounds(25, 480, 415, 45);
+            microphoneStatusLabel.Anchor =
                 AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
 
-            ConfigureButton(repeatButton, "REPETIR", Color.FromArgb(52, 66, 86));
-            repeatButton.SetBounds(580, 480, 155, 45);
-            repeatButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            ConfigureButton(forceCheckButton, "FORCAR CHECK", primary);
+            forceCheckButton.SetBounds(450, 480, 130, 45);
+            forceCheckButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            forceCheckButton.Enabled = false;
+
+            ConfigureButton(finishButton, "TERMINAR", danger);
+            finishButton.SetBounds(590, 480, 145, 45);
+            finishButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            finishButton.Enabled = false;
 
             statusLabel.Text = "Carregando checklists...";
             statusLabel.ForeColor = muted;
@@ -146,7 +157,8 @@ namespace FSChecklist.Features.Main
             Controls.AddRange(new Control[]
             {
                 logoPictureBox, title, aircraftTitle, aircraftBox, checklistTitle, checklistBox,
-                startButton, centerPanel, pttButton, repeatButton, statusLabel
+                startButton, centerPanel, microphoneStatusLabel, forceCheckButton,
+                finishButton, statusLabel
             });
         }
 
