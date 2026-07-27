@@ -110,8 +110,11 @@ namespace FSChecklist.Features.Main
             centerPanel.Anchor =
                 AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
 
-            simulatorStatusLabel.Text = simulator.Status;
-            simulatorStatusLabel.ForeColor = warning;
+            simulatorStatusLabel.Text = simulator.IsConnected
+                ? "Sim conectado"
+                : "Sim não conectado";
+            simulatorStatusLabel.ForeColor =
+                simulator.IsConnected ? success : danger;
             simulatorStatusLabel.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
             simulatorStatusLabel.TextAlign = ContentAlignment.TopLeft;
             simulatorStatusLabel.SetBounds(20, 14, 355, 24);
