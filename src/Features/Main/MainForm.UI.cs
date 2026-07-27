@@ -16,9 +16,9 @@ namespace FSChecklist.Features.Main
         private readonly ComboBox aircraftBox = new ComboBox();
         private readonly ComboBox checklistBox = new ComboBox();
         private readonly Button startButton = new Button();
-        private readonly Button backButton = new Button();
         private readonly Button pttButton = new Button();
         private readonly Button repeatButton = new Button();
+        private readonly PictureBox logoPictureBox = new PictureBox();
         private readonly Label progressLabel = new Label();
         private readonly Label stateLabel = new Label();
         private readonly Label challengeLabel = new Label();
@@ -37,31 +37,31 @@ namespace FSChecklist.Features.Main
             StartPosition = FormStartPosition.CenterScreen;
             KeyPreview = true;
 
+            logoPictureBox.Image = LoadLogo();
+            logoPictureBox.SizeMode = PictureBoxSizeMode.Zoom;
+            logoPictureBox.SetBounds(24, 16, 54, 54);
+
             Label title = MakeLabel("FSChecklist", 26F, FontStyle.Bold);
-            title.SetBounds(24, 18, 400, 44);
-            Label subtitle = MakeLabel(
-                "Callouts locais, na ordem exata do seu JSON", 10F, FontStyle.Regular);
-            subtitle.ForeColor = muted;
-            subtitle.SetBounds(26, 61, 500, 25);
+            title.SetBounds(90, 21, 400, 44);
 
             Label aircraftTitle = MakeLabel("Aeronave", 9F, FontStyle.Regular);
             aircraftTitle.ForeColor = muted;
-            aircraftTitle.SetBounds(25, 102, 200, 20);
-            aircraftBox.SetBounds(25, 123, 265, 34);
+            aircraftTitle.SetBounds(25, 82, 200, 20);
+            aircraftBox.SetBounds(25, 103, 265, 34);
             aircraftBox.DropDownStyle = ComboBoxStyle.DropDownList;
 
             Label checklistTitle = MakeLabel("Checklist", 9F, FontStyle.Regular);
             checklistTitle.ForeColor = muted;
-            checklistTitle.SetBounds(305, 102, 200, 20);
-            checklistBox.SetBounds(305, 123, 265, 34);
+            checklistTitle.SetBounds(305, 82, 200, 20);
+            checklistBox.SetBounds(305, 103, 265, 34);
             checklistBox.DropDownStyle = ComboBoxStyle.DropDownList;
 
             ConfigureButton(startButton, "INICIAR", primary);
-            startButton.SetBounds(585, 121, 150, 38);
+            startButton.SetBounds(585, 101, 150, 38);
 
             var centerPanel = new Panel();
             centerPanel.BackColor = panelColor;
-            centerPanel.SetBounds(25, 181, 710, 280);
+            centerPanel.SetBounds(25, 161, 710, 300);
             centerPanel.Anchor =
                 AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
 
@@ -100,13 +100,9 @@ namespace FSChecklist.Features.Main
                 progressLabel, stateLabel, challengeLabel, expectedLabel, heardLabel
             });
 
-            ConfigureButton(backButton, "< VOLTAR", Color.FromArgb(52, 66, 86));
-            backButton.SetBounds(25, 480, 155, 45);
-            backButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-
             ConfigureButton(pttButton, "SEGURE PARA FALAR - F9 GLOBAL", primary);
             pttButton.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            pttButton.SetBounds(190, 480, 380, 45);
+            pttButton.SetBounds(25, 480, 545, 45);
             pttButton.Anchor =
                 AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
 
@@ -123,9 +119,20 @@ namespace FSChecklist.Features.Main
 
             Controls.AddRange(new Control[]
             {
-                title, subtitle, aircraftTitle, aircraftBox, checklistTitle, checklistBox,
-                startButton, centerPanel, backButton, pttButton, repeatButton, statusLabel
+                logoPictureBox, title, aircraftTitle, aircraftBox, checklistTitle, checklistBox,
+                startButton, centerPanel, pttButton, repeatButton, statusLabel
             });
+        }
+
+        private static Image LoadLogo()
+        {
+            using (System.IO.Stream stream = typeof(MainForm).Assembly
+                .GetManifestResourceStream("FSChecklist.Assets.Logo.png"))
+            {
+                if (stream == null) return null;
+                using (Image image = Image.FromStream(stream))
+                    return new Bitmap(image);
+            }
         }
 
         private static Label MakeLabel(string text, float size, FontStyle style)

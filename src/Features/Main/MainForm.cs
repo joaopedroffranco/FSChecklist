@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Media;
 using System.Windows.Forms;
 using FSChecklist.Domain.Checklists;
 using FSChecklist.Features.Checklist;
@@ -19,9 +20,11 @@ namespace FSChecklist.Features.Main
         private readonly IGlobalPushToTalk globalPushToTalk;
         private readonly ChecklistSession session = new ChecklistSession();
         private readonly List<ChecklistDocument> documents = new List<ChecklistDocument>();
+        private readonly Timer listeningAnimationTimer = new Timer { Interval = 350 };
 
         private bool listening;
         private bool responseHandled;
+        private int listeningAnimationStep;
         private string checklistStatus = string.Empty;
         private string speechStatus = "Reconhecimento: inicializando...";
         private string hotkeyStatus;
@@ -61,10 +64,6 @@ namespace FSChecklist.Features.Main
         {
             aircraftBox.SelectedIndexChanged += AircraftChanged;
             startButton.Click += delegate { StartSelectedChecklist(); };
-            backButton.Click += delegate
-            {
-                if (session.MoveBack()) ShowCurrentItem();
-            };
             repeatButton.Click += delegate
             {
                 ChecklistItem item = session.CurrentItem;
@@ -78,6 +77,7 @@ namespace FSChecklist.Features.Main
             {
                 if (args.Button == MouseButtons.Left) StopListening();
             };
+            listeningAnimationTimer.Tick += delegate { AnimateListening(); };
 
             speechRecognition.SpeechRecognized += OnSpeechRecognized;
             speechRecognition.RecognitionCompleted += delegate
@@ -111,6 +111,7 @@ namespace FSChecklist.Features.Main
             FormClosed += delegate
             {
                 if (globalPushToTalk != null) globalPushToTalk.Dispose();
+                listeningAnimationTimer.Dispose();
                 speechRecognition.Dispose();
                 speechSynthesis.Dispose();
             };
@@ -215,9 +216,12 @@ namespace FSChecklist.Features.Main
             listening = true;
             responseHandled = false;
             speechSynthesis.Cancel();
-            pttButton.BackColor = danger;
-            pttButton.Text = "OUVINDO... SOLTE PARA ENVIAR";
-            SetState("OUVINDO", System.Drawing.Color.White);
+            SystemSounds.Beep.Play();
+            listeningAnimationStep = 0;
+            pttButton.BackColor = success;
+            AnimateListening();
+            listeningAnimationTimer.Start();
+            SetState("OUVINDO", success);
 
             try
             {
@@ -289,10 +293,20 @@ namespace FSChecklist.Features.Main
         private void ResetPtt()
         {
             listening = false;
+            listeningAnimationTimer.Stop();
             pttButton.BackColor = primary;
             pttButton.Text = speechRecognition.IsReady
                 ? "SEGURE PARA FALAR - F9 GLOBAL"
                 : "RECONHECIMENTO DE VOZ INDISPONIVEL";
+        }
+
+        private void AnimateListening()
+        {
+            if (!listening) return;
+            listeningAnimationStep = (listeningAnimationStep % 3) + 1;
+            string dots = new string('.', listeningAnimationStep);
+            pttButton.Text = "OUVINDO" + dots + "  SOLTE PARA ENVIAR";
+            stateLabel.Text = "OUVINDO" + dots;
         }
 
         private void RefreshStatus()

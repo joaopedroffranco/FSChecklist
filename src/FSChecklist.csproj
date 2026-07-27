@@ -15,4 +15,8 @@
   <ItemGroup>
     <PackageReference Include="System.Speech" Version="8.0.0" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\assets\fschecklist-logo.png"
+                      LogicalName="FSChecklist.Assets.Logo.png" />
+  </ItemGroup>
 </Project>
