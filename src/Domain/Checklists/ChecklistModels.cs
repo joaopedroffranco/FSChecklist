@@ -5,6 +5,7 @@ namespace FSChecklist.Domain.Checklists
     internal sealed class ChecklistRules
     {
         public bool acceptAnyAnswer { get; set; }
+        public List<string> acceptedResponses { get; set; }
     }
 
     internal sealed class ChecklistDefinition

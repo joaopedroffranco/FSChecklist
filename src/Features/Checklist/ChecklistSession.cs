@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -35,6 +37,23 @@ namespace FSChecklist.Features.Checklist
             }
         }
 
+        public IReadOnlyList<string> AcceptedResponses
+        {
+            get
+            {
+                ChecklistItem item = CurrentItem;
+                if (item != null && item.Responses.Count > 0)
+                    return item.Responses;
+
+                if (Document != null &&
+                    Document.rules != null &&
+                    Document.rules.acceptedResponses != null)
+                    return Document.rules.acceptedResponses;
+
+                return Array.Empty<string>();
+            }
+        }
+
         public void Start(ChecklistDocument document, ChecklistDefinition checklist)
         {
             Document = document;
@@ -61,11 +80,10 @@ namespace FSChecklist.Features.Checklist
 
             if (!matched)
             {
-                foreach (string response in item.Responses)
+                foreach (string response in AcceptedResponses)
                 {
                     string answer = NormalizeSpeech(response);
-                    if (heard == answer ||
-                        Regex.IsMatch(heard, "(^| )" + Regex.Escape(answer) + "( |$)"))
+                    if (heard == answer)
                     {
                         matched = true;
                         break;

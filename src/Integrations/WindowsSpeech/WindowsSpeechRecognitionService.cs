@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FSChecklist.Features.SpeechRecognition;
 using Windows.Devices.Enumeration;
+using Windows.Foundation;
 using Windows.Globalization;
 using Windows.Media.Devices;
 using Windows.Media.SpeechRecognition;
@@ -14,13 +15,16 @@ namespace FSChecklist.Integrations.WindowsSpeech
     {
         private readonly string languageTag;
         private readonly SemaphoreSlim gate = new SemaphoreSlim(1, 1);
+        private Language language;
         private SpeechRecognizer recognizer;
+        private IAsyncOperation<SpeechRecognitionResult> activeRecognition;
         private bool started;
 
         public bool IsReady { get; private set; }
         public string Status { get; private set; } = "Reconhecimento: inicializando...";
 
         public event EventHandler<SpeechRecognizedEventArgs> SpeechRecognized;
+        public event EventHandler<SpeechRecognizedEventArgs> SpeechHypothesized;
         public event EventHandler<SpeechListeningStateChangedEventArgs>
             ListeningStateChanged;
         public event EventHandler RecognitionCompleted;
@@ -34,28 +38,14 @@ namespace FSChecklist.Integrations.WindowsSpeech
         {
             try
             {
-                Language language = SpeechRecognizer.SupportedTopicLanguages.FirstOrDefault(
+                language = SpeechRecognizer.SupportedTopicLanguages.FirstOrDefault(
                     item => string.Equals(item.LanguageTag, languageTag,
                         StringComparison.OrdinalIgnoreCase));
                 if (language == null)
                     throw new InvalidOperationException(
                         "O Windows nao oferece reconhecimento para " + languageTag + ".");
 
-                recognizer = new SpeechRecognizer(language);
-                recognizer.Timeouts.EndSilenceTimeout =
-                    TimeSpan.FromMilliseconds(500);
-                recognizer.Constraints.Add(new SpeechRecognitionTopicConstraint(
-                    SpeechRecognitionScenario.Dictation, "pilot-response"));
-
-                SpeechRecognitionCompilationResult compilation =
-                    await recognizer.CompileConstraintsAsync();
-                if (compilation.Status != SpeechRecognitionResultStatus.Success)
-                    throw new InvalidOperationException(
-                        "Falha ao preparar reconhecimento: " + compilation.Status);
-
-                recognizer.ContinuousRecognitionSession.ResultGenerated += OnResultGenerated;
-                recognizer.ContinuousRecognitionSession.Completed += OnCompleted;
-                recognizer.StateChanged += OnStateChanged;
+                await CreateRecognizerAsync();
 
                 IsReady = true;
                 string microphoneName = await GetDefaultMicrophoneNameAsync();
@@ -66,11 +56,7 @@ namespace FSChecklist.Integrations.WindowsSpeech
             {
                 IsReady = false;
                 Status = "Voz indisponivel: " + error.GetBaseException().Message;
-                if (recognizer != null)
-                {
-                    recognizer.Dispose();
-                    recognizer = null;
-                }
+                DisposeRecognizer();
             }
         }
 
@@ -109,6 +95,73 @@ namespace FSChecklist.Integrations.WindowsSpeech
             }
         }
 
+        public async Task<SpeechRecognizedEventArgs> RecognizeOnceAsync()
+        {
+            if (!IsReady || recognizer == null)
+                throw new InvalidOperationException(Status);
+
+            await gate.WaitAsync();
+            try
+            {
+                // A fresh recognizer avoids the Windows one-shot session
+                // remaining in an unusable state after the previous item.
+                await CreateRecognizerAsync();
+                activeRecognition = recognizer.RecognizeAsync();
+                SpeechRecognitionResult result = await activeRecognition;
+                return new SpeechRecognizedEventArgs(
+                    result.Text,
+                    MapConfidence(result.Confidence));
+            }
+            finally
+            {
+                activeRecognition = null;
+                gate.Release();
+            }
+        }
+
+        public Task CancelAsync()
+        {
+            IAsyncOperation<SpeechRecognitionResult> operation =
+                activeRecognition;
+            if (operation != null) operation.Cancel();
+            return Task.CompletedTask;
+        }
+
+        private async Task CreateRecognizerAsync()
+        {
+            DisposeRecognizer();
+            recognizer = new SpeechRecognizer(language);
+            recognizer.Timeouts.InitialSilenceTimeout =
+                TimeSpan.FromSeconds(30);
+            recognizer.Timeouts.EndSilenceTimeout =
+                TimeSpan.FromMilliseconds(500);
+            recognizer.Constraints.Add(new SpeechRecognitionTopicConstraint(
+                SpeechRecognitionScenario.Dictation, "pilot-response"));
+
+            SpeechRecognitionCompilationResult compilation =
+                await recognizer.CompileConstraintsAsync();
+            if (compilation.Status != SpeechRecognitionResultStatus.Success)
+                throw new InvalidOperationException(
+                    "Falha ao preparar reconhecimento: " + compilation.Status);
+
+            recognizer.ContinuousRecognitionSession.ResultGenerated += OnResultGenerated;
+            recognizer.ContinuousRecognitionSession.Completed += OnCompleted;
+            recognizer.HypothesisGenerated += OnHypothesisGenerated;
+            recognizer.StateChanged += OnStateChanged;
+        }
+
+        private void DisposeRecognizer()
+        {
+            if (recognizer == null) return;
+            recognizer.ContinuousRecognitionSession.ResultGenerated -= OnResultGenerated;
+            recognizer.ContinuousRecognitionSession.Completed -= OnCompleted;
+            recognizer.HypothesisGenerated -= OnHypothesisGenerated;
+            recognizer.StateChanged -= OnStateChanged;
+            recognizer.Dispose();
+            recognizer = null;
+            started = false;
+        }
+
         private void OnResultGenerated(
             SpeechContinuousRecognitionSession sender,
             SpeechContinuousRecognitionResultGeneratedEventArgs args)
@@ -129,6 +182,18 @@ namespace FSChecklist.Integrations.WindowsSpeech
             if (handler != null) handler(this, EventArgs.Empty);
         }
 
+        private void OnHypothesisGenerated(
+            SpeechRecognizer sender,
+            SpeechRecognitionHypothesisGeneratedEventArgs args)
+        {
+            EventHandler<SpeechRecognizedEventArgs> handler = SpeechHypothesized;
+            if (handler == null || args.Hypothesis == null) return;
+
+            handler(this, new SpeechRecognizedEventArgs(
+                args.Hypothesis.Text,
+                RecognitionConfidence.Low));
+        }
+
         private void OnStateChanged(
             SpeechRecognizer sender,
             SpeechRecognizerStateChangedEventArgs args)
@@ -144,6 +209,7 @@ namespace FSChecklist.Integrations.WindowsSpeech
                     state = SpeechListeningState.Listening;
                     break;
                 case SpeechRecognizerState.SoundStarted:
+                case SpeechRecognizerState.SpeechDetected:
                     state = SpeechListeningState.SoundDetected;
                     break;
                 case SpeechRecognizerState.Processing:
@@ -196,14 +262,12 @@ namespace FSChecklist.Integrations.WindowsSpeech
 
         public void Dispose()
         {
-            if (recognizer != null)
+            if (activeRecognition != null)
             {
-                recognizer.ContinuousRecognitionSession.ResultGenerated -= OnResultGenerated;
-                recognizer.ContinuousRecognitionSession.Completed -= OnCompleted;
-                recognizer.StateChanged -= OnStateChanged;
-                recognizer.Dispose();
-                recognizer = null;
+                activeRecognition.Cancel();
+                activeRecognition = null;
             }
+            DisposeRecognizer();
             gate.Dispose();
         }
     }

@@ -15,6 +15,7 @@ namespace FSChecklist.Integrations.WindowsSpeech
 
         public WindowsSpeechSynthesisService()
         {
+            ConfigureVoice();
             synthesizer.SpeakCompleted += delegate(object sender, SpeakCompletedEventArgs args)
             {
                 TaskCompletionSource<bool> completion = null;
@@ -28,6 +29,29 @@ namespace FSChecklist.Integrations.WindowsSpeech
                 }
                 if (completion != null) completion.TrySetResult(true);
             };
+        }
+
+        private void ConfigureVoice()
+        {
+            synthesizer.Rate = 2;
+            synthesizer.Volume = 100;
+
+            InstalledVoice preferredVoice = synthesizer.GetInstalledVoices()
+                .Where(voice => voice.Enabled)
+                .OrderByDescending(voice =>
+                    voice.VoiceInfo.Gender == VoiceGender.Male &&
+                    voice.VoiceInfo.Culture.Name == "en-US")
+                .ThenByDescending(voice =>
+                    voice.VoiceInfo.Gender == VoiceGender.Male &&
+                    voice.VoiceInfo.Culture.Name == "pt-BR")
+                .ThenByDescending(voice =>
+                    voice.VoiceInfo.Culture.Name == "en-US")
+                .ThenByDescending(voice =>
+                    voice.VoiceInfo.Culture.Name == "pt-BR")
+                .FirstOrDefault();
+
+            if (preferredVoice != null)
+                synthesizer.SelectVoice(preferredVoice.VoiceInfo.Name);
         }
 
         public void Speak(string text)

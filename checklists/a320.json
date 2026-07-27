@@ -6,7 +6,15 @@
     "speakLanguage": "pt-BR",
     "checklistLanguage": "en",
     "onlyRespondWhenCalled": "Copiloto",
-    "acceptAnyAnswer": true,
+    "acceptAnyAnswer": false,
+    "acceptedResponses": [
+      "set",
+      "check",
+      "on",
+      "off",
+      "auto",
+      "auto and set"
+    ],
     "dontCorrect": true,
     "dontComment": true,
     "pauseCommands": ["pausa", "calma", "espera"],

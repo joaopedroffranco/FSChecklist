@@ -20,13 +20,11 @@ namespace FSChecklist.Features.Main
         private readonly IGlobalPushToTalk globalPushToTalk;
         private readonly ChecklistSession session = new ChecklistSession();
         private readonly List<ChecklistDocument> documents = new List<ChecklistDocument>();
-        private readonly Timer listeningAnimationTimer = new Timer { Interval = 350 };
 
         private bool checklistRunning;
         private bool awaitingResponse;
         private bool processingResponse;
         private bool recognitionStarted;
-        private int listeningAnimationStep;
         private string checklistStatus = string.Empty;
         private string speechStatus = "Reconhecimento: inicializando...";
         private string hotkeyStatus;
@@ -57,7 +55,7 @@ namespace FSChecklist.Features.Main
                 startButton.Enabled = speechRecognition.IsReady;
                 if (!speechRecognition.IsReady)
                     microphoneStatusLabel.Text =
-                        "MICROFONE: RECONHECIMENTO INDISPONIVEL";
+                        "Reconhecimento de voz indisponivel";
                 UpdateReadyChecklist();
                 RefreshStatus();
             };
@@ -75,9 +73,9 @@ namespace FSChecklist.Features.Main
                 async delegate { await ForceCurrentItemAsync(); };
             finishButton.Click +=
                 async delegate { await FinishChecklistAsync(); };
-            listeningAnimationTimer.Tick += delegate { AnimateListening(); };
 
             speechRecognition.SpeechRecognized += OnSpeechRecognized;
+            speechRecognition.SpeechHypothesized += OnSpeechHypothesized;
             speechRecognition.ListeningStateChanged += OnListeningStateChanged;
             speechRecognition.RecognitionCompleted += delegate
             {
@@ -117,7 +115,6 @@ namespace FSChecklist.Features.Main
             {
                 checklistRunning = false;
                 if (globalPushToTalk != null) globalPushToTalk.Dispose();
-                listeningAnimationTimer.Dispose();
                 pendingItemFont.Dispose();
                 currentItemFont.Dispose();
                 completedItemFont.Dispose();
@@ -191,16 +188,16 @@ namespace FSChecklist.Features.Main
             if (checklist == null) return;
 
             checklistNameLabel.Text =
-                "CURRENT CHECKLIST: " + checklist.name.ToUpperInvariant();
+                checklist.name.ToUpperInvariant();
             challengeLabel.Text = checklist.name;
             expectedLabel.Text = "Pressione F9 para iniciar o ciclo completo";
             progressLabel.Text = checklist.items.Count + " itens";
-            heardLabel.Text = "Microfone desligado";
+            heardLabel.Text = string.Empty;
             SetState("PRONTO", success);
             SetMicrophoneStatus(
                 speechRecognition.IsReady
-                    ? "MICROFONE: DESLIGADO - F9 INICIA"
-                    : "MICROFONE: RECONHECIMENTO INDISPONIVEL",
+                    ? "Microfone desligado"
+                    : "Reconhecimento de voz indisponivel",
                 System.Drawing.Color.FromArgb(31, 43, 58),
                 muted);
             RefreshPreviewItems(checklist);
@@ -222,10 +219,9 @@ namespace FSChecklist.Features.Main
 
             try
             {
-                await StopRecognitionAsync();
-                await StartRecognitionAsync();
+                await speechRecognition.CancelAsync();
                 checklistNameLabel.Text =
-                    "CURRENT CHECKLIST: " + checklist.name.ToUpperInvariant();
+                    checklist.name.ToUpperInvariant();
                 heardLabel.Text = "Iniciando checklist...";
                 SetState("INICIANDO", primary);
                 await speechSynthesis.SpeakAsync(checklist.name + " checklist");
@@ -252,37 +248,61 @@ namespace FSChecklist.Features.Main
             UpdateCurrentItemUi(item);
             awaitingResponse = false;
             processingResponse = true;
-            forceCheckButton.Enabled = false;
+            SetCompactActionEnabled(forceCheckButton, false, primary);
             SetMicrophoneStatus(
-                "MICROFONE: PAUSADO - COPILOTO FALANDO",
-                primary,
+                "Microfone aberto - copiloto falando",
+                success,
                 System.Drawing.Color.White);
             SetState("CALLOUT", primary);
 
+            Task<SpeechRecognizedEventArgs> recognitionTask =
+                speechRecognition.RecognizeOnceAsync();
             await speechSynthesis.SpeakAsync(item.Callout);
-            if (!checklistRunning) return;
+            if (!checklistRunning)
+            {
+                await speechRecognition.CancelAsync();
+                return;
+            }
 
-            // The microphone stays open for the entire checklist. Results
-            // produced by the copilot voice are ignored until this guard ends.
-            await Task.Delay(500);
             processingResponse = false;
             awaitingResponse = true;
-            listeningAnimationStep = 0;
-            listeningAnimationTimer.Start();
-            forceCheckButton.Enabled = true;
-            AnimateListening();
+            SetCompactActionEnabled(forceCheckButton, true, primary);
+            ShowListeningStatus();
+
+            try
+            {
+                SpeechRecognizedEventArgs response =
+                    await recognitionTask;
+                if (checklistRunning && awaitingResponse)
+                    await HandleSpeechRecognizedAsync(response);
+            }
+            catch (OperationCanceledException)
+            {
+                // A manual check or finish command intentionally cancels
+                // the current one-shot recognition operation.
+            }
+            catch (Exception error)
+            {
+                HandleSpeechFailure("Falha ao reconhecer resposta: ", error);
+                EndChecklistRun();
+            }
         }
 
         private void UpdateCurrentItemUi(ChecklistItem item)
         {
             checklistNameLabel.Text =
-                "CURRENT CHECKLIST: " + session.Checklist.name.ToUpperInvariant();
+                session.Checklist.name.ToUpperInvariant();
             challengeLabel.Text = item.Callout;
             bool acceptsAny = session.Document.rules != null &&
                               session.Document.rules.acceptAnyAnswer;
-            expectedLabel.Text = acceptsAny || item.Responses.Count == 0
+            IReadOnlyList<string> acceptedResponses =
+                session.AcceptedResponses;
+            expectedLabel.Text = acceptsAny
                 ? "Responda normalmente; qualquer resposta reconhecida confirma"
-                : "Resposta esperada: " + string.Join(" / ", item.Responses);
+                : acceptedResponses.Count == 0
+                    ? "Nenhuma resposta valida configurada"
+                    : "Resposta esperada: " +
+                      string.Join(" / ", acceptedResponses);
             progressLabel.Text =
                 "Item " + (session.ItemIndex + 1) + " de " + session.ItemCount;
             heardLabel.Text = "Aguardando seu readback...";
@@ -296,6 +316,8 @@ namespace FSChecklist.Features.Main
             foreach (object value in checklist.items)
                 AddChecklistItemRow(ChecklistItem.FromJson(value), false, false);
             checklistItemsPanel.ResumeLayout();
+            checklistItemsPanel.AutoScrollPosition =
+                new System.Drawing.Point(0, 0);
         }
 
         private void RefreshChecklistItems()
@@ -313,6 +335,11 @@ namespace FSChecklist.Features.Main
                     !session.IsComplete && index == session.ItemIndex);
             }
             checklistItemsPanel.ResumeLayout();
+            if (session.ItemIndex == 0)
+            {
+                checklistItemsPanel.AutoScrollPosition =
+                    new System.Drawing.Point(0, 0);
+            }
         }
 
         private void ClearChecklistItems()
@@ -329,11 +356,11 @@ namespace FSChecklist.Features.Main
             var row = new Panel
             {
                 BackColor = current
-                    ? System.Drawing.Color.FromArgb(31, 43, 58)
+                    ? System.Drawing.Color.FromArgb(32, 47, 64)
                     : panelColor,
-                Height = 27,
-                Width = Math.Max(100, checklistItemsPanel.ClientSize.Width - 24),
-                Margin = new Padding(0, 0, 0, 2)
+                Height = 56,
+                Width = Math.Max(100, checklistItemsPanel.ClientSize.Width - 4),
+                Margin = new Padding(0)
             };
 
             var icon = new Label
@@ -344,7 +371,7 @@ namespace FSChecklist.Features.Main
                 TextAlign = System.Drawing.ContentAlignment.MiddleCenter,
                 BackColor = System.Drawing.Color.Transparent
             };
-            icon.SetBounds(4, 2, 24, 23);
+            icon.SetBounds(8, 0, 28, 55);
 
             var text = new Label
             {
@@ -359,11 +386,35 @@ namespace FSChecklist.Features.Main
                 AutoEllipsis = true,
                 BackColor = System.Drawing.Color.Transparent
             };
-            text.SetBounds(32, 2, row.Width - 40, 23);
+            text.SetBounds(42, 0, row.Width - 180, 55);
             text.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+
+            var itemStatus = new Label
+            {
+                Text = completed ? "CHECKED" : current ? "READBACK" : string.Empty,
+                ForeColor = completed ? success : current ? warning : muted,
+                Font = new System.Drawing.Font(
+                    "Segoe UI",
+                    8.5F,
+                    System.Drawing.FontStyle.Bold),
+                TextAlign = System.Drawing.ContentAlignment.MiddleRight,
+                BackColor = System.Drawing.Color.Transparent
+            };
+            itemStatus.SetBounds(row.Width - 132, 0, 116, 55);
+            itemStatus.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+
+            var separator = new Panel
+            {
+                BackColor = System.Drawing.Color.FromArgb(55, 67, 82)
+            };
+            separator.SetBounds(0, 55, row.Width, 1);
+            separator.Anchor =
+                AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
 
             row.Controls.Add(icon);
             row.Controls.Add(text);
+            row.Controls.Add(itemStatus);
+            row.Controls.Add(separator);
             checklistItemsPanel.Controls.Add(row);
         }
 
@@ -372,6 +423,24 @@ namespace FSChecklist.Features.Main
             SpeechRecognizedEventArgs args)
         {
             RunOnUi(async delegate { await HandleSpeechRecognizedAsync(args); });
+        }
+
+        private void OnSpeechHypothesized(
+            object sender,
+            SpeechRecognizedEventArgs args)
+        {
+            RunOnUi(delegate
+            {
+                if (!checklistRunning ||
+                    !awaitingResponse ||
+                    processingResponse ||
+                    string.IsNullOrWhiteSpace(args.Text))
+                    return;
+
+                SetState("FALA DETECTADA", success);
+                heardLabel.Text = "Detectado: " + args.Text;
+
+            });
         }
 
         private void OnListeningStateChanged(
@@ -385,29 +454,25 @@ namespace FSChecklist.Features.Main
                 switch (args.State)
                 {
                     case SpeechListeningState.SoundDetected:
-                        listeningAnimationTimer.Stop();
                         SetState("SOM DETECTADO", success);
                         heardLabel.Text =
                             "O microfone detectou audio; continue falando.";
                         SetMicrophoneStatus(
-                            "MICROFONE: SOM DETECTADO - CONTINUE FALANDO",
+                            "Som detectado - continue falando",
                             success,
                             System.Drawing.Color.White);
                         break;
                     case SpeechListeningState.Processing:
-                        listeningAnimationTimer.Stop();
                         SetState("PROCESSANDO FALA", warning);
                         heardLabel.Text =
                             "Audio recebido; convertendo para texto...";
                         SetMicrophoneStatus(
-                            "MICROFONE: PROCESSANDO FALA...",
+                            "Processando fala...",
                             warning,
                             background);
                         break;
                     case SpeechListeningState.Listening:
-                        if (!listeningAnimationTimer.Enabled)
-                            listeningAnimationTimer.Start();
-                        SetState("OUVINDO", success);
+                        ShowListeningStatus();
                         break;
                 }
             });
@@ -418,12 +483,18 @@ namespace FSChecklist.Features.Main
         {
             if (!checklistRunning || !awaitingResponse || processingResponse)
                 return;
-            if (string.IsNullOrWhiteSpace(args.Text)) return;
+            if (string.IsNullOrWhiteSpace(args.Text))
+            {
+                processingResponse = true;
+                awaitingResponse = false;
+                await RetryCurrentItemAsync(
+                    "Nenhuma fala reconhecida. Tente novamente.");
+                return;
+            }
 
             processingResponse = true;
             awaitingResponse = false;
-            forceCheckButton.Enabled = false;
-            listeningAnimationTimer.Stop();
+            SetCompactActionEnabled(forceCheckButton, false, primary);
             heardLabel.Text = "Ouvido: " + args.Text +
                               " (" + args.Confidence + ")";
 
@@ -457,6 +528,7 @@ namespace FSChecklist.Features.Main
         {
             SetState("NAO CONFIRMADO", danger);
             heardLabel.Text = message;
+            System.Media.SystemSounds.Hand.Play();
             await speechSynthesis.SpeakAsync("Nao confirmado");
             processingResponse = false;
             await PresentCurrentItemAsync();
@@ -472,8 +544,8 @@ namespace FSChecklist.Features.Main
 
             processingResponse = true;
             awaitingResponse = false;
-            forceCheckButton.Enabled = false;
-            listeningAnimationTimer.Stop();
+            SetCompactActionEnabled(forceCheckButton, false, primary);
+            await speechRecognition.CancelAsync();
             SetState("CHECK MANUAL", success);
             heardLabel.Text = "Item confirmado manualmente.";
             RefreshChecklistItems();
@@ -486,36 +558,17 @@ namespace FSChecklist.Features.Main
         {
             if (!checklistRunning) return;
 
-            checklistRunning = false;
-            awaitingResponse = false;
-            processingResponse = false;
-            forceCheckButton.Enabled = false;
-            listeningAnimationTimer.Stop();
+            processingResponse = true;
             speechSynthesis.Cancel();
-
-            try
-            {
-                await StopRecognitionAsync();
-            }
-            catch (Exception error)
-            {
-                speechStatus =
-                    "Falha ao encerrar microfone: " + DescribeSpeechError(error);
-            }
-
-            session.End();
-            SetRunControls(true);
-            UpdateReadyChecklist();
-            heardLabel.Text = "Checklist encerrada manualmente. Microfone desligado.";
-            SetState("ENCERRADA", warning);
-            RefreshStatus();
+            await CompleteCurrentChecklistAsync(true);
         }
 
-        private async Task CompleteCurrentChecklistAsync()
+        private async Task CompleteCurrentChecklistAsync(
+            bool manuallyTerminated = false)
         {
             processingResponse = true;
             awaitingResponse = false;
-            listeningAnimationTimer.Stop();
+            await speechRecognition.CancelAsync();
             await StopRecognitionAsync();
 
             ChecklistDefinition completedChecklist = session.Checklist;
@@ -529,15 +582,26 @@ namespace FSChecklist.Features.Main
                 : completedCallout + ". Next checklist, " + nextChecklist.name;
 
             checklistNameLabel.Text =
-                "CURRENT CHECKLIST: " + completedChecklist.name.ToUpperInvariant();
+                completedChecklist.name.ToUpperInvariant();
             challengeLabel.Text = completedChecklist.name + " completa";
             expectedLabel.Text = nextChecklist == null
                 ? "Nao ha proxima checklist configurada"
                 : "Proxima checklist: " + nextChecklist.name;
             progressLabel.Text = session.ItemCount + " de " + session.ItemCount;
-            heardLabel.Text = "Microfone desligado";
-            SetState("COMPLETA", success);
+            heardLabel.Text = manuallyTerminated
+                ? "Checklist encerrada manualmente."
+                : "Checklist concluida.";
+            SetState(manuallyTerminated ? "ENCERRADA" : "COMPLETA",
+                manuallyTerminated ? warning : success);
             RefreshChecklistItems();
+
+            if (nextChecklist != null)
+            {
+                int nextIndex = session.Document.checklists.IndexOf(nextChecklist);
+                if (nextIndex >= 0) checklistBox.SelectedIndex = nextIndex;
+                checklistNameLabel.Text =
+                    nextChecklist.name.ToUpperInvariant();
+            }
 
             await speechSynthesis.SpeakAsync(announcement);
             checklistRunning = false;
@@ -546,17 +610,17 @@ namespace FSChecklist.Features.Main
 
             if (nextChecklist != null)
             {
-                checklistBox.SelectedItem = nextChecklist.name;
                 checklistNameLabel.Text =
-                    "CURRENT CHECKLIST: " + nextChecklist.name.ToUpperInvariant();
+                    nextChecklist.name.ToUpperInvariant();
                 challengeLabel.Text = nextChecklist.name;
                 expectedLabel.Text = "Pressione F9 para iniciar o ciclo completo";
                 progressLabel.Text = nextChecklist.items.Count + " itens";
-                heardLabel.Text =
-                    completedChecklist.name + " complete. Microfone desligado.";
+                heardLabel.Text = manuallyTerminated
+                    ? completedChecklist.name + " encerrada manualmente."
+                    : completedChecklist.name + " complete.";
                 SetState("PRONTO", success);
                 RefreshPreviewItems(nextChecklist);
-                checklistStatus = "Current checklist: " + nextChecklist.name + ".";
+                checklistStatus = "Checklist atual: " + nextChecklist.name + ".";
             }
             else
             {
@@ -565,7 +629,7 @@ namespace FSChecklist.Features.Main
             }
 
             SetMicrophoneStatus(
-                "MICROFONE: DESLIGADO - F9 INICIA",
+                "Microfone desligado",
                 System.Drawing.Color.FromArgb(31, 43, 58),
                 muted);
             RefreshStatus();
@@ -621,12 +685,11 @@ namespace FSChecklist.Features.Main
             awaitingResponse = false;
             processingResponse = false;
             recognitionStarted = false;
-            listeningAnimationTimer.Stop();
             SetRunControls(true);
             SetMicrophoneStatus(
                 speechRecognition.IsReady
-                    ? "MICROFONE: DESLIGADO - F9 INICIA"
-                    : "MICROFONE: RECONHECIMENTO INDISPONIVEL",
+                    ? "Microfone desligado"
+                    : "Reconhecimento de voz indisponivel",
                 System.Drawing.Color.FromArgb(31, 43, 58),
                 muted);
         }
@@ -636,8 +699,11 @@ namespace FSChecklist.Features.Main
             aircraftBox.Enabled = enabled;
             checklistBox.Enabled = enabled;
             startButton.Enabled = enabled && speechRecognition.IsReady;
-            forceCheckButton.Enabled = !enabled && awaitingResponse;
-            finishButton.Enabled = !enabled;
+            SetCompactActionEnabled(
+                forceCheckButton,
+                !enabled && awaitingResponse,
+                primary);
+            SetCompactActionEnabled(finishButton, !enabled, danger);
         }
 
         private static string DescribeSpeechError(Exception error)
@@ -660,16 +726,14 @@ namespace FSChecklist.Features.Main
             }
         }
 
-        private void AnimateListening()
+        private void ShowListeningStatus()
         {
             if (!awaitingResponse) return;
-            listeningAnimationStep = (listeningAnimationStep % 3) + 1;
-            string dots = new string('.', listeningAnimationStep);
             SetMicrophoneStatus(
-                "MICROFONE: OUVINDO" + dots + "  RESPONDA AO CALLOUT",
+                "Microfone ouvindo...",
                 success,
                 System.Drawing.Color.White);
-            stateLabel.Text = "OUVINDO" + dots;
+            stateLabel.Text = "OUVINDO...";
             stateLabel.ForeColor = success;
         }
 
@@ -679,8 +743,11 @@ namespace FSChecklist.Features.Main
             System.Drawing.Color foreColor)
         {
             microphoneStatusLabel.Text = text;
-            microphoneStatusLabel.BackColor = backColor;
-            microphoneStatusLabel.ForeColor = foreColor;
+            microphoneStatusLabel.BackColor = System.Drawing.Color.Transparent;
+            microphoneStatusLabel.ForeColor =
+                backColor == System.Drawing.Color.FromArgb(31, 43, 58)
+                    ? foreColor
+                    : backColor;
         }
 
         private void RefreshStatus()

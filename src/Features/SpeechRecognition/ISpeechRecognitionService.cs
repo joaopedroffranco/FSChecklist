@@ -47,6 +47,7 @@ namespace FSChecklist.Features.SpeechRecognition
         string Status { get; }
 
         event EventHandler<SpeechRecognizedEventArgs> SpeechRecognized;
+        event EventHandler<SpeechRecognizedEventArgs> SpeechHypothesized;
         event EventHandler<SpeechListeningStateChangedEventArgs>
             ListeningStateChanged;
         event EventHandler RecognitionCompleted;
@@ -54,5 +55,7 @@ namespace FSChecklist.Features.SpeechRecognition
         Task InitializeAsync();
         Task StartAsync();
         Task StopAsync();
+        Task<SpeechRecognizedEventArgs> RecognizeOnceAsync();
+        Task CancelAsync();
     }
 }
