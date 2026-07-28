@@ -177,12 +177,7 @@ namespace FSChecklist.Features.Main
         {
             RunOnUi(delegate
             {
-                simulatorStatusLabel.Text = localizer.Get(
-                    simulator.IsConnected
-                        ? "SimConnected"
-                        : "SimDisconnected");
-                simulatorStatusLabel.ForeColor =
-                    simulator.IsConnected ? success : danger;
+                UpdateSimulatorStatus();
             });
         }
 

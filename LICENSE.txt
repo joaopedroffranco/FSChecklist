@@ -1,0 +1,35 @@
+FSChecklist Freeware License
+Version 1.0, July 2026
+
+Copyright (c) 2026 João Pedro Fabiano Franco. All rights reserved.
+
+Permission is granted to download, install, and use the unmodified FSChecklist
+binary free of charge for personal, non-commercial flight-simulation use.
+
+You may redistribute the complete, unmodified official release archive,
+provided that this license, the privacy notice, and all attribution notices
+remain included.
+
+You may not:
+
+1. sell, rent, sublicense, or charge for access to FSChecklist;
+2. modify, repackage, or redistribute modified binaries under the FSChecklist
+   name;
+3. use the FSChecklist name or logo to imply endorsement or authorship;
+4. reverse engineer the application except where applicable law expressly
+   permits it; or
+5. use the software for real-world aviation operations.
+
+The source code published in the FSChecklist repository is provided for
+inspection and contribution only. No permission to copy, modify, distribute,
+or create derivative works from the source code is granted unless a file
+explicitly states otherwise or the copyright holder gives written permission.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING
+FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR ITS USE.
+
+FSChecklist is intended exclusively for entertainment and flight simulation.
+It is not approved for training, navigation, or real-world aviation.

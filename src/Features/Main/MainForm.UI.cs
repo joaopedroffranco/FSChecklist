@@ -38,6 +38,7 @@ namespace FSChecklist.Features.Main
         private readonly Label heardLabel = new Label();
         private readonly Label statusLabel = new Label();
         private readonly Label simulatorStatusLabel = new Label();
+        private readonly Label simulatorStatusDescriptionLabel = new Label();
         private readonly FlowLayoutPanel checklistItemsPanel = new FlowLayoutPanel();
         private readonly Font pendingItemFont =
             new Font("Segoe UI", 10.5F, FontStyle.Regular);
@@ -110,16 +111,19 @@ namespace FSChecklist.Features.Main
             centerPanel.Anchor =
                 AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
 
-            simulatorStatusLabel.Text = localizer.Get(
-                simulator.IsConnected
-                    ? "SimConnected"
-                    : "SimDisconnected");
-            simulatorStatusLabel.ForeColor =
-                simulator.IsConnected ? success : danger;
             simulatorStatusLabel.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
             simulatorStatusLabel.TextAlign = ContentAlignment.TopLeft;
             simulatorStatusLabel.SetBounds(20, 14, 355, 24);
             simulatorStatusLabel.Anchor =
+                AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+
+            simulatorStatusDescriptionLabel.ForeColor = muted;
+            simulatorStatusDescriptionLabel.Font =
+                new Font("Segoe UI", 8.5F, FontStyle.Regular);
+            simulatorStatusDescriptionLabel.TextAlign =
+                ContentAlignment.TopLeft;
+            simulatorStatusDescriptionLabel.SetBounds(20, 35, 555, 34);
+            simulatorStatusDescriptionLabel.Anchor =
                 AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
 
             progressLabel.Text = localizer.Get("NoChecklistStarted");
@@ -189,7 +193,8 @@ namespace FSChecklist.Features.Main
 
             centerPanel.Controls.AddRange(new Control[]
             {
-                simulatorStatusLabel, progressLabel, stateLabel, checklistNameLabel, challengeLabel,
+                simulatorStatusLabel, simulatorStatusDescriptionLabel,
+                progressLabel, stateLabel, checklistNameLabel, challengeLabel,
                 expectedLabel, checklistItemsPanel, microphoneStatusLabel, heardLabel
             });
 
@@ -213,6 +218,8 @@ namespace FSChecklist.Features.Main
 
             centerPanel.Controls.Add(forceCheckButton);
             centerPanel.Controls.Add(finishButton);
+
+            UpdateSimulatorStatus();
 
             Controls.AddRange(new Control[]
             {
@@ -269,6 +276,25 @@ namespace FSChecklist.Features.Main
                 : microphoneStatusLabel.Top - 8;
             checklistItemsPanel.Height =
                 listBottom - checklistItemsPanel.Top;
+        }
+
+        private void UpdateSimulatorStatus()
+        {
+            bool connected = simulator.IsConnected;
+            simulatorStatusLabel.Text = localizer.Get(
+                connected ? "SimConnected" : "SimDisconnected");
+            simulatorStatusLabel.ForeColor = connected ? success : danger;
+            simulatorStatusDescriptionLabel.Text =
+                localizer.Get("SimDisconnectedDescription");
+            simulatorStatusDescriptionLabel.Visible = !connected;
+
+            int contentOffset = connected ? 0 : 32;
+            progressLabel.Top = 38 + contentOffset;
+            stateLabel.Top = 38 + contentOffset;
+            checklistNameLabel.Top = 64 + contentOffset;
+            expectedLabel.Top = 106 + contentOffset;
+            checklistItemsPanel.Top = 140 + contentOffset;
+            UpdateFooterLayout();
         }
 
         private void DrawCheckIcon(object sender, PaintEventArgs args)
