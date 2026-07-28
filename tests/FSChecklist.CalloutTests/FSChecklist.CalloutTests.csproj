@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\src\Domain\Flight\FlightCallout.cs"
+             Link="Domain\FlightCallout.cs" />
+    <Compile Include="..\..\src\Domain\Flight\FlightTelemetry.cs"
+             Link="Domain\FlightTelemetry.cs" />
+    <Compile Include="..\..\src\Features\FlightCallouts\FlightCalloutEngine.cs"
+             Link="Features\FlightCalloutEngine.cs" />
+  </ItemGroup>
+</Project>

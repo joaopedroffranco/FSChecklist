@@ -72,6 +72,31 @@ the official x64 `SimConnect.dll` from its SimConnect SDK beside
 reports whether the simulator is connected. Voice checklists continue to work
 when SimConnect is unavailable.
 
+### Automatic flight callouts
+
+While SimConnect is connected, FSChecklist monitors the user aircraft and
+speaks these callouts in English:
+
+- `One hundred knots` during an armed takeoff roll;
+- `V one` when a valid V1 supplied by the aircraft is crossed;
+- `Positive climb` after liftoff with a positive vertical speed;
+- `Ten thousand` when indicated altitude crosses 10,000 ft in either
+  direction;
+- `Two thousand` when radio altitude crosses 2,000 ft during descent;
+- `Spoilers`, `Reverse green` or `No reverse` after touchdown;
+- `Sixty knots` during the landing roll;
+- `Manual brake` when pilot braking is detected with autobrake inactive.
+
+Takeoff mode is armed only while accelerating on the ground above 30 knots
+with both engines at takeoff power. Landing-roll callouts are armed only after
+the application has observed the aircraft airborne, which prevents false
+callouts when the application starts while taxiing.
+
+V1 is never estimated. The initial integration reads the common
+`L:AIRLINER_V1_SPEED` value and the Fenix
+`L:FNX2PLD_speedV1` value. If neither aircraft value contains a plausible
+speed, the V1 callout is skipped.
+
 ## Configure speech recognition
 
 On Windows 11:

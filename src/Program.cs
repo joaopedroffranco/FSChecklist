@@ -3,6 +3,7 @@ using System.Windows.Forms;
 using FSChecklist.Domain.Settings;
 using FSChecklist.Features.AudioInput;
 using FSChecklist.Features.Errors;
+using FSChecklist.Features.FlightCallouts;
 using FSChecklist.Features.Input;
 using FSChecklist.Features.Localization;
 using FSChecklist.Features.Main;
@@ -60,6 +61,10 @@ namespace FSChecklist
                 new WindowsSpeechRecognitionService("en-US", localizer);
             ISpeechSynthesisService synthesis = new WindowsSpeechSynthesisService();
             ISimulatorConnection simulator = new SimConnectConnection();
+            IFlightCalloutService flightCallouts =
+                new FlightCalloutService(
+                    simulator,
+                    new WindowsSpeechSynthesisService());
 
             try
             {
@@ -73,7 +78,8 @@ namespace FSChecklist
                     settings,
                     localizer,
                     audioInput,
-                    simulator));
+                    simulator,
+                    flightCallouts));
             }
             catch (Exception error)
             {

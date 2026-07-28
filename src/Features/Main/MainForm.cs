@@ -8,6 +8,7 @@ using FSChecklist.Domain.Checklists;
 using FSChecklist.Domain.Settings;
 using FSChecklist.Features.AudioInput;
 using FSChecklist.Features.Checklist;
+using FSChecklist.Features.FlightCallouts;
 using FSChecklist.Features.Input;
 using FSChecklist.Features.Localization;
 using FSChecklist.Features.Repository;
@@ -27,6 +28,7 @@ namespace FSChecklist.Features.Main
         private readonly IAppLocalizer localizer;
         private readonly IAudioInputDeviceService audioInput;
         private readonly ISimulatorConnection simulator;
+        private readonly IFlightCalloutService flightCallouts;
         private readonly string hotkeyError;
         private readonly ChecklistSession session = new ChecklistSession();
         private readonly List<ChecklistDocument> documents = new List<ChecklistDocument>();
@@ -51,7 +53,8 @@ namespace FSChecklist.Features.Main
             AppSettings settings,
             IAppLocalizer localizer,
             IAudioInputDeviceService audioInput,
-            ISimulatorConnection simulator)
+            ISimulatorConnection simulator,
+            IFlightCalloutService flightCallouts)
         {
             this.repository = repository;
             this.speechRecognition = speechRecognition;
@@ -63,6 +66,7 @@ namespace FSChecklist.Features.Main
             this.localizer = localizer;
             this.audioInput = audioInput;
             this.simulator = simulator;
+            this.flightCallouts = flightCallouts;
             speechStatus = localizer.Get("SpeechInitializing");
             UpdateHotkeyStatus();
 
@@ -70,6 +74,7 @@ namespace FSChecklist.Features.Main
             WireEvents();
             LoadChecklists();
             simulator.StatusChanged += OnSimulatorStatusChanged;
+            flightCallouts.Start();
             simulator.Start();
 
             Shown += async delegate
@@ -163,6 +168,7 @@ namespace FSChecklist.Features.Main
                 if (Icon != null) Icon.Dispose();
                 speechRecognition.Dispose();
                 speechSynthesis.Dispose();
+                flightCallouts.Dispose();
                 simulator.Dispose();
             };
         }

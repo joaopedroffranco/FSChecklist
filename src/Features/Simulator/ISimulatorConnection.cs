@@ -1,4 +1,5 @@
 using System;
+using FSChecklist.Domain.Flight;
 
 namespace FSChecklist.Features.Simulator
 {
@@ -6,6 +7,7 @@ namespace FSChecklist.Features.Simulator
     {
         bool IsConnected { get; }
         event Action StatusChanged;
+        event Action<FlightTelemetry> TelemetryReceived;
         void Start();
     }
 }
