@@ -13,7 +13,8 @@
       "on",
       "off",
       "auto",
-      "auto and set"
+      "auto and set",
+      "standby"
     ],
     "dontCorrect": true,
     "dontComment": true,
@@ -112,8 +113,8 @@
       "next": "Landing",
       "items": [
         "Landing Lights",
-        "ILS",
         "Seatbelts",
+        "ILS",
         "Autobrake"
       ]
     },
