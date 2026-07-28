@@ -26,8 +26,12 @@ advances when the response matches the checklist configuration.
 - selectable Windows input microphone;
 - support for key combinations as shortcuts;
 - Windows speech recognition with no external API key required;
-- support for multiple aircraft and checklists.
-- automatic SimConnect connection status for Microsoft Flight Simulator 2024.
+- support for multiple aircraft and checklists;
+- automatic SimConnect connection and reconnection status for Microsoft
+  Flight Simulator 2024;
+- SimConnect integration for automatic flight callouts, including examples
+  such as `V one`, `Positive climb`, altitude crossings, spoilers, and reverse
+  status.
 
 ## Download and install
 
