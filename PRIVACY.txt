@@ -1,0 +1,24 @@
+FSChecklist Privacy Notice
+Version 1.0, July 2026
+
+FSChecklist does not create user accounts, include advertising, store voice
+recordings, or send telemetry to the FSChecklist developer.
+
+Voice recognition is provided by Windows. If the Windows online speech
+recognition option is enabled, Microsoft may process speech according to the
+Microsoft privacy statement and the user's Windows privacy settings.
+
+Application settings are stored locally at:
+
+%LocalAppData%\FSChecklist\settings.json
+
+FSChecklist reads simulator telemetry through SimConnect when Microsoft Flight
+Simulator 2024 is running. This data is processed locally and is not sent to
+the FSChecklist developer.
+
+Diagnostic information is shown locally in the application. Users choose what
+information to include when they voluntarily open a support request.
+
+Questions about this notice may be submitted at:
+
+https://github.com/joaopedroffranco/FSChecklist/issues

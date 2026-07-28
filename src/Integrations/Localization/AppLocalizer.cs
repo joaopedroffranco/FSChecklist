@@ -14,6 +14,9 @@ namespace FSChecklist.Integrations.Localization
                 ["Checklist"] = "Checklist",
                 ["SimConnected"] = "Sim conectado",
                 ["SimDisconnected"] = "Sim não conectado",
+                ["SimDisconnectedDescription"] =
+                    "Para uma melhor experiência com os callouts, abra o " +
+                    "Microsoft Flight Simulator.",
                 ["Settings"] = "Configurações",
                 ["StartButton"] = "INICIAR OU {0}",
                 ["NoChecklistStarted"] = "Nenhuma checklist iniciada",
@@ -127,6 +130,9 @@ namespace FSChecklist.Integrations.Localization
                 ["Checklist"] = "Checklist",
                 ["SimConnected"] = "Sim connected",
                 ["SimDisconnected"] = "Sim disconnected",
+                ["SimDisconnectedDescription"] =
+                    "For a better callout experience, open Microsoft Flight " +
+                    "Simulator.",
                 ["Settings"] = "Settings",
                 ["StartButton"] = "START OR {0}",
                 ["NoChecklistStarted"] = "No checklist started",

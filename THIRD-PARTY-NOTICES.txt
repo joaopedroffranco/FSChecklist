@@ -1,0 +1,28 @@
+FSChecklist Third-Party Notices
+Version 1.0, July 2026
+
+FSChecklist is built with Microsoft .NET 8 and uses the System.Speech package.
+Their use and redistribution are governed by Microsoft's applicable license
+terms.
+
+.NET
+https://github.com/dotnet/runtime
+https://dotnet.microsoft.com/platform/free
+
+System.Speech
+https://www.nuget.org/packages/System.Speech
+
+Microsoft Flight Simulator and SimConnect are trademarks or technologies of
+Microsoft and their respective rights holders. FSChecklist is an independent
+community project and is not affiliated with or endorsed by Microsoft, Asobo
+Studio, or an aircraft manufacturer.
+
+This release includes the official x64 SimConnect.dll from the Microsoft Flight
+Simulator 2024 SDK solely to enable communication between FSChecklist and an
+authorized Microsoft Flight Simulator installation. The library remains
+subject to the Microsoft Flight Simulator SDK license terms:
+
+https://docs.flightsimulator.com/msfs2024/html/1_Introduction/SDK_Contents.htm
+
+Aircraft names and other trademarks belong to their respective owners and are
+used only to describe compatibility.

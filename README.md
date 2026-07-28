@@ -58,21 +58,20 @@ certificate can still be blocked by Smart App Control.
 - a microphone configured as the Windows input device;
 - the **English (United States)** speech-recognition package installed in
   Windows;
-- [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0)
-  if requested by Windows.
-- the official x64 `SimConnect.dll` from the MSFS 2024 SDK, copied beside
-  `FSChecklist.exe`, to enable simulator connectivity.
+- no separate .NET installation is required;
+- the official x64 `SimConnect.dll` is included beside `FSChecklist.exe`.
 
 The application remains usable when Microsoft Flight Simulator is not running.
 It reconnects through SimConnect automatically every five seconds.
 
 ## SimConnect
 
-Install the Microsoft Flight Simulator 2024 SDK from Developer Mode and copy
-the official x64 `SimConnect.dll` from its SimConnect SDK beside
-`FSChecklist.exe`. The connection indicator at the top of the checklist panel
-reports whether the simulator is connected. Voice checklists continue to work
-when SimConnect is unavailable.
+The official x64 `SimConnect.dll` is included in the release package. Open
+Microsoft Flight Simulator 2024 and FSChecklist connects automatically. The
+connection indicator at the top of the checklist panel reports whether the
+simulator is connected. Voice checklists continue to work when SimConnect is
+unavailable because the integration is used only for simulator-aware automatic
+flight callouts.
 
 ### Automatic flight callouts
 
@@ -259,3 +258,9 @@ When reporting a problem, include:
 - error message;
 - steps to reproduce;
 - a screenshot, when possible.
+
+## License
+
+FSChecklist is currently distributed as freeware for personal,
+non-commercial flight-simulation use. See [LICENSE.txt](LICENSE.txt) for the
+complete terms. The FSChecklist name and logo remain protected.

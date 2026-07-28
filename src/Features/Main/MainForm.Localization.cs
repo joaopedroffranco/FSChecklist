@@ -20,10 +20,7 @@ namespace FSChecklist.Features.Main
             actionToolTip.SetToolTip(
                 finishButton,
                 localizer.Get("FinishTip"));
-            simulatorStatusLabel.Text = localizer.Get(
-                simulator.IsConnected
-                    ? "SimConnected"
-                    : "SimDisconnected");
+            UpdateSimulatorStatus();
 
             if (!checklistRunning)
                 UpdateReadyChecklist();
