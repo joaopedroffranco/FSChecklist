@@ -15,7 +15,8 @@ advances when the response matches the checklist configuration.
 
 - English voice callouts and `en-US` speech recognition;
 - JSON-based checklists;
-- global `F9` shortcut, even while the simulator is in the foreground;
+- configurable global shortcut, with `F9` as the default, even while the
+  simulator is in the foreground;
 - visual list of pending, current, and completed items;
 - configurable accepted responses, with exact response validation;
 - audible negative feedback for rejected responses;
@@ -23,7 +24,7 @@ advances when the response matches the checklist configuration.
 - automatic transition to the next configured checklist;
 - Portuguese and English interface languages;
 - selectable Windows input microphone;
-- configurable global shortcut, including key combinations;
+- support for key combinations as shortcuts;
 - Windows speech recognition with no external API key required;
 - support for multiple aircraft and checklists.
 - automatic SimConnect connection status for Microsoft Flight Simulator 2024.
@@ -46,9 +47,6 @@ appears, verify that the file came from this repository before selecting
 Smart App Control is different from SmartScreen and does not provide an
 individual app exception. Development builds signed with a local self-signed
 certificate can still be blocked by Smart App Control.
-
-If no ready-to-use version is available on the Releases page, follow the
-[build instructions](#build-from-source).
 
 ## Requirements
 
@@ -118,7 +116,7 @@ The names of these settings may be slightly different on Windows 10.
 
 1. Open `FSChecklist.exe`.
 2. Select an aircraft and a checklist.
-3. Click **INICIAR OU F9** or press `F9`.
+3. Click **START** or use the configured shortcut (`F9` by default).
 4. Wait for the copilot to read the item.
 5. Answer using one of the responses configured in the checklist JSON.
 6. Follow the progress in the checklist panel.
@@ -126,7 +124,7 @@ The names of these settings may be slightly different on Windows 10.
 The microphone remains open throughout the checklist, including while the
 copilot is reading a callout. After the final item, the app announces the
 completion, selects the next configured checklist, and turns the microphone
-off. Press `F9` again to start the next checklist.
+off. Use the configured shortcut again to start the next checklist.
 
 Available controls:
 
@@ -175,11 +173,14 @@ error details and a single **Entendido** / **Understood** button.
 - confirm that the status reports `en-US` recognition as ready;
 - speak only after the status indicates that the microphone is listening.
 
-### F9 does not work
+### The shortcut does not work
 
-- check whether the interface reports that global `F9` is active;
+- remember that `F9` is only the default and check the shortcut selected in
+  **Settings**;
+- check whether the interface reports that the configured global shortcut is
+  active;
 - close any other application that may be intercepting the key;
-- use the **INICIAR OU F9** button as an alternative.
+- use the **START** button as an alternative.
 
 ### The application does not open
 
@@ -194,12 +195,12 @@ Place `.json` files inside the `checklists` folder. Item content and order are
 controlled exclusively by the file: the application does not invent, reorder,
 or skip steps using AI.
 
-Checklist that accepts only a global list of exact responses:
+The supported contract uses a global list of exact responses and checklist
+items represented by strings:
 
 ```json
 {
   "aircraft": "Fenix A320",
-  "language": "en-US",
   "rules": {
     "acceptAnyAnswer": false,
     "acceptedResponses": [
@@ -228,61 +229,7 @@ Checklist that accepts only a global list of exact responses:
 }
 ```
 
-Checklist with specific responses:
-
-```json
-{
-  "schemaVersion": 1,
-  "aircraft": "B777",
-  "language": "en-US",
-  "rules": { "acceptAnyAnswer": false },
-  "checklists": [
-    {
-      "id": "before-start",
-      "name": "Before Start",
-      "completedCallout": "Before start checklist complete",
-      "items": [
-        {
-          "id": "parking-brake",
-          "callout": "Parking brake",
-          "responses": ["set", "released"]
-        }
-      ]
-    }
-  ]
-}
-```
-
 See `checklists/a320.json` for a complete example.
-
-## Build from source
-
-Development requirements:
-
-- [Git](https://git-scm.com/);
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0);
-- 64-bit Windows 10 or Windows 11.
-
-Clone and publish the project:
-
-```powershell
-git clone https://github.com/joaopedroffranco/FSChecklist.git
-cd FSChecklist
-dotnet restore .\src\FSChecklist.csproj --configfile .\NuGet.Config
-dotnet publish .\src\FSChecklist.csproj `
-  --configuration Release `
-  --runtime win-x64 `
-  --self-contained false `
-  --output .\.build-output
-Copy-Item .\.build-output\FSChecklist.exe .\FSChecklist.exe -Force
-```
-
-The executable will be created at `FSChecklist.exe` in the repository root.
-Keep the existing `checklists` folder next to it.
-
-The `build.ps1` script is the maintainer's distribution workflow. It also signs
-the executable, so it requires the Windows SDK and a local
-`CN=FSChecklist Local` certificate.
 
 ## Privacy and safety
 
@@ -297,7 +244,11 @@ the executable, so it requires the Windows SDK and a local
 
 ## Contributing
 
-Issues and pull requests are welcome. When reporting a problem, include:
+FSChecklist is being developed as a commercial product, so its complete
+distribution is not intended to be 100% open source. Issues and pull requests
+for the public parts of the project are still welcome.
+
+When reporting a problem, include:
 
 - Windows version;
 - aircraft and checklist used;
