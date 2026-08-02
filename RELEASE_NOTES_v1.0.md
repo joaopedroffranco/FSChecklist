@@ -1,6 +1,6 @@
-# FSChecklist v1.0-beta
+# FSChecklist v1.0
 
-The first public beta of the free FSChecklist Community release.
+The first stable release of FSChecklist Community.
 
 ## Highlights
 
@@ -14,7 +14,7 @@ The first public beta of the free FSChecklist Community release.
 
 ## Installation
 
-1. Download `FSChecklist-v1.0-beta-win-x64.zip`.
+1. Download `FSChecklist-v1.0-win-x64.zip`.
 2. Extract the complete archive to a folder.
 3. Run `FSChecklist.exe`.
 4. Install Windows English (United States) speech recognition.
@@ -28,13 +28,12 @@ Microsoft Flight Simulator 2024 and FSChecklist will connect automatically.
 The application remains fully usable without the simulator; SimConnect only
 enables simulator-aware automatic flight callouts.
 
-## Beta limitations
+## Notes
 
 - voice recognition requires the Windows `en-US` speech component;
-- accepted checklist responses use exact configured phrases;
-- aircraft compatibility and automatic callouts are still being expanded;
-- the executable uses a local development signature and Windows may display a
-  SmartScreen warning.
+- checklist responses are limited to the phrases configured in the aircraft JSON;
+- aircraft compatibility and automatic callouts will continue to expand;
+- Windows may display a SmartScreen warning for the downloaded executable.
 
 ## Safety
 

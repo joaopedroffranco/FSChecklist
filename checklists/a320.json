@@ -14,7 +14,12 @@
       "off",
       "auto",
       "auto and set",
-      "standby"
+      "standby",
+      "start",
+      "norm",
+      "no blue",
+      "arm",
+      "disarm"
     ],
     "dontCorrect": true,
     "dontComment": true,
@@ -31,7 +36,9 @@
         "Navi Lights",
         "Fasten Seatbelts",
         "No Smoking",
-        "Transponder"
+        "Transponder",
+        "Altitude",
+        "QNH"
       ]
     },
     {
@@ -43,6 +50,7 @@
         "Beacon",
         "APU",
         "Fuel Pump Switches",
+        "Doors",
         "Mode Selector"
       ]
     },
