@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -113,6 +114,8 @@ namespace FSChecklist.Features.Main
                 async delegate { await FinishChecklistAsync(); };
             settingsButton.Click +=
                 async delegate { await OpenSettingsAsync(); };
+            openChecklistsFolderButton.Click += delegate { OpenChecklistsFolder(); };
+            refreshChecklistsButton.Click += delegate { LoadChecklists(true); };
 
             speechRecognition.SpeechRecognized += OnSpeechRecognized;
             speechRecognition.SpeechHypothesized += OnSpeechHypothesized;
@@ -181,12 +184,45 @@ namespace FSChecklist.Features.Main
             });
         }
 
-        private void LoadChecklists()
+        private string ChecklistsDirectory()
+        {
+            return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "checklists");
+        }
+
+        private void OpenChecklistsFolder()
         {
             try
             {
-                string directory =
-                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "checklists");
+                string directory = ChecklistsDirectory();
+                Directory.CreateDirectory(directory);
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "explorer.exe",
+                    Arguments = "\"" + directory + "\"",
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception error)
+            {
+                ShowError(error.GetBaseException().Message);
+            }
+        }
+
+        private void LoadChecklists(bool preserveSelection = false)
+        {
+            string selectedAircraft = preserveSelection
+                ? Convert.ToString(aircraftBox.SelectedItem)
+                : string.Empty;
+            string selectedChecklist = preserveSelection
+                ? Convert.ToString(checklistBox.SelectedItem)
+                : string.Empty;
+            try
+            {
+                string directory = ChecklistsDirectory();
+                Directory.CreateDirectory(directory);
+                documents.Clear();
+                aircraftBox.Items.Clear();
+                checklistBox.Items.Clear();
                 documents.AddRange(repository.LoadAll(directory));
 
                 foreach (string aircraft in documents
@@ -199,7 +235,10 @@ namespace FSChecklist.Features.Main
 
                 if (aircraftBox.Items.Count > 0)
                 {
-                    aircraftBox.SelectedIndex = 0;
+                    int aircraftIndex = aircraftBox.Items.IndexOf(selectedAircraft);
+                    aircraftBox.SelectedIndex = aircraftIndex >= 0 ? aircraftIndex : 0;
+                    int checklistIndex = checklistBox.Items.IndexOf(selectedChecklist);
+                    if (checklistIndex >= 0) checklistBox.SelectedIndex = checklistIndex;
                     checklistStatus = string.Empty;
                 }
                 else
@@ -808,6 +847,8 @@ namespace FSChecklist.Features.Main
         {
             aircraftBox.Enabled = enabled;
             checklistBox.Enabled = enabled;
+            openChecklistsFolderButton.Enabled = enabled;
+            refreshChecklistsButton.Enabled = enabled;
             settingsButton.Enabled = enabled;
             startButton.Enabled = enabled && speechRecognition.IsReady;
             SetCompactActionEnabled(

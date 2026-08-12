@@ -2,7 +2,7 @@
 
 [CmdletBinding()]
 param(
-    [string]$Version = 'v1.0'
+    [string]$Version = 'v1.2.0'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -11,7 +11,7 @@ $repositoryRoot = $PSScriptRoot
 $executable = Join-Path $repositoryRoot 'FSChecklist.exe'
 $simConnect = Join-Path $repositoryRoot 'SimConnect.dll'
 $checklists = Join-Path $repositoryRoot 'checklists'
-$releaseNotes = Join-Path $repositoryRoot 'RELEASE_NOTES_v1.0.md'
+$releaseNotes = Join-Path $repositoryRoot 'RELEASE_NOTES_v1.2.0.md'
 $releaseRoot = Join-Path $repositoryRoot 'release'
 $packageName = "FSChecklist-$Version-win-x64"
 $stagingDirectory = Join-Path $releaseRoot $packageName

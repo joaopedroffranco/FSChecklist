@@ -15,6 +15,12 @@ namespace FSChecklist.Features.Main
                 settingsButton,
                 localizer.Get("Settings"));
             actionToolTip.SetToolTip(
+                openChecklistsFolderButton,
+                localizer.Get("OpenChecklistsFolder"));
+            actionToolTip.SetToolTip(
+                refreshChecklistsButton,
+                localizer.Get("RefreshChecklists"));
+            actionToolTip.SetToolTip(
                 forceCheckButton,
                 localizer.Get("ForceCheckTip"));
             actionToolTip.SetToolTip(

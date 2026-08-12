@@ -40,17 +40,34 @@ advances when the response matches the checklist configuration.
 1. Open the
    [Releases](https://github.com/joaopedroffranco/FSChecklist/releases) page.
 2. Select the latest version.
-3. Under **Assets**, download the file provided for Windows.
-4. If the download is a `.zip` file, extract all its contents into a folder.
-5. Run `FSChecklist.exe`.
+3. Under **Assets**, download `FSChecklist-Setup-<version>-win-x64.exe`.
+4. Run the installer.
+5. Review the license and choose the installation folder. The default is
+   `%LocalAppData%\Programs\FSChecklist`, but another writable folder can be
+   selected.
+6. Optionally create a desktop shortcut and complete the installation.
+7. Open FSChecklist from the Start menu or the desktop shortcut.
 
-Keep the `checklists` folder next to the executable. If Windows SmartScreen
-appears, verify that the file came from this repository before selecting
+The installer places the `checklists` folder beside `FSChecklist.exe`. If a
+protected destination such as `Program Files` is selected, Windows may require
+administrator permission to edit checklist files. If Windows SmartScreen
+appears, verify that the installer came from this repository before selecting
 **More info → Run anyway**.
 
 Smart App Control is different from SmartScreen and does not provide an
 individual app exception. Development builds signed with a local self-signed
 certificate can still be blocked by Smart App Control.
+
+### Update an existing installation
+
+Download the installer for the newer version and run it without uninstalling
+the current version first. The installer recognizes the existing installation,
+keeps its destination, replaces the application files, and preserves existing
+JSON files in the `checklists` folder.
+
+For example, to update from `1.1.0` to `1.2.0`, run
+`FSChecklist-Setup-1.2.0-win-x64.exe` over the existing installation. Use the
+same Windows user account that installed the previous version.
 
 ## Requirements
 
@@ -131,6 +148,10 @@ off. Use the configured shortcut again to start the next checklist.
 
 Available controls:
 
+- **Folder icon:** opens the `checklists` folder beside the application in
+  Windows Explorer. Add, edit, rename, or remove JSON files there;
+- **Refresh icon:** reloads the JSON files after they are changed in Windows
+  Explorer;
 - **Check icon — Force check:** manually confirms the current item;
 - **Stop icon — Finish:** ends the current checklist and selects the next one.
 
@@ -187,9 +208,11 @@ error details and a single **Entendido** / **Understood** button.
 
 ### The application does not open
 
-- extract the `.zip` file before running the application;
-- install the .NET 8 Desktop Runtime;
-- do not remove the `checklists` folder;
+- reinstall the latest version over the existing installation;
+- confirm that antivirus or Windows security did not quarantine the
+  application;
+- no separate .NET installation is required because the installer includes a
+  self-contained build;
 - open an issue with a screenshot and the error message.
 
 ## Add checklists
@@ -197,6 +220,11 @@ error details and a single **Entendido** / **Understood** button.
 Place `.json` files inside the `checklists` folder. Item content and order are
 controlled exclusively by the file: the application does not invent, reorder,
 or skip steps using AI.
+
+Use the folder icon in the application to open the correct location. After
+adding, editing, renaming, or deleting JSON files, return to FSChecklist and
+select the refresh icon. Existing checklist files are not overwritten when the
+application is updated and are preserved by the uninstaller.
 
 The supported contract uses a global list of exact responses and checklist
 items represented by strings:

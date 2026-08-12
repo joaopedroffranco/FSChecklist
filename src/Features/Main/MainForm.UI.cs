@@ -24,6 +24,8 @@ namespace FSChecklist.Features.Main
         private readonly ComboBox aircraftBox = new ComboBox();
         private readonly ComboBox checklistBox = new ComboBox();
         private readonly Button startButton = new Button();
+        private readonly Button openChecklistsFolderButton = new Button();
+        private readonly Button refreshChecklistsButton = new Button();
         private readonly Button settingsButton = new Button();
         private readonly Button forceCheckButton = new Button();
         private readonly Button finishButton = new Button();
@@ -65,8 +67,8 @@ namespace FSChecklist.Features.Main
                 9F,
                 FontStyle.Regular);
             aircraftTitle.ForeColor = muted;
-            aircraftTitle.SetBounds(25, 14, 180, 20);
-            aircraftBox.SetBounds(25, 33, 180, 38);
+            aircraftTitle.SetBounds(25, 14, 160, 20);
+            aircraftBox.SetBounds(25, 33, 160, 38);
             aircraftBox.DropDownStyle = ComboBoxStyle.DropDownList;
             aircraftBox.BackColor = panelColor;
             aircraftBox.ForeColor = textPrimary;
@@ -80,8 +82,8 @@ namespace FSChecklist.Features.Main
                 9F,
                 FontStyle.Regular);
             checklistTitle.ForeColor = muted;
-            checklistTitle.SetBounds(215, 14, 205, 20);
-            checklistBox.SetBounds(215, 33, 205, 38);
+            checklistTitle.SetBounds(195, 14, 165, 20);
+            checklistBox.SetBounds(195, 33, 165, 38);
             checklistBox.DropDownStyle = ComboBoxStyle.DropDownList;
             checklistBox.BackColor = panelColor;
             checklistBox.ForeColor = textPrimary;
@@ -94,7 +96,19 @@ namespace FSChecklist.Features.Main
                 localizer.Format("StartButton", CurrentHotkeyText()),
                 primary);
             startButton.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
-            startButton.SetBounds(430, 33, 145, 38);
+            startButton.SetBounds(460, 33, 115, 38);
+
+            ConfigureButton(openChecklistsFolderButton, string.Empty, disabledButton);
+            openChecklistsFolderButton.Name = "OpenChecklistsFolderButton";
+            openChecklistsFolderButton.SetBounds(370, 33, 36, 38);
+            openChecklistsFolderButton.Paint += DrawFolderIcon;
+            actionToolTip.SetToolTip(openChecklistsFolderButton, localizer.Get("OpenChecklistsFolder"));
+
+            ConfigureButton(refreshChecklistsButton, string.Empty, disabledButton);
+            refreshChecklistsButton.Name = "RefreshChecklistsButton";
+            refreshChecklistsButton.SetBounds(414, 33, 36, 38);
+            refreshChecklistsButton.Paint += DrawRefreshIcon;
+            actionToolTip.SetToolTip(refreshChecklistsButton, localizer.Get("RefreshChecklists"));
 
             ConfigureButton(settingsButton, string.Empty, disabledButton);
             settingsButton.Name = "SettingsButton";
@@ -224,7 +238,8 @@ namespace FSChecklist.Features.Main
             Controls.AddRange(new Control[]
             {
                 aircraftTitle, aircraftBox, checklistTitle, checklistBox,
-                settingsButton, startButton, centerPanel
+                settingsButton, openChecklistsFolderButton,
+                refreshChecklistsButton, startButton, centerPanel
             });
         }
 
@@ -370,6 +385,45 @@ namespace FSChecklist.Features.Main
                     centerY - 1.5F,
                     3F,
                     3F);
+            }
+        }
+
+        private void DrawFolderIcon(object sender, PaintEventArgs args)
+        {
+            var button = (Button)sender;
+            args.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            using (var pen = new Pen(textPrimary, 2F))
+            {
+                var bounds = new Rectangle(button.ClientSize.Width / 2 - 10,
+                    button.ClientSize.Height / 2 - 6, 20, 14);
+                args.Graphics.DrawRectangle(pen, bounds);
+                args.Graphics.DrawLines(pen, new[]
+                {
+                    new Point(bounds.Left + 2, bounds.Top),
+                    new Point(bounds.Left + 5, bounds.Top - 4),
+                    new Point(bounds.Left + 11, bounds.Top - 4),
+                    new Point(bounds.Left + 14, bounds.Top)
+                });
+            }
+        }
+
+        private void DrawRefreshIcon(object sender, PaintEventArgs args)
+        {
+            var button = (Button)sender;
+            args.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            using (var pen = new Pen(textPrimary, 2F))
+            {
+                pen.StartCap = LineCap.Round;
+                pen.EndCap = LineCap.Round;
+                var bounds = new Rectangle(button.ClientSize.Width / 2 - 8,
+                    button.ClientSize.Height / 2 - 8, 16, 16);
+                args.Graphics.DrawArc(pen, bounds, 35, 285);
+                args.Graphics.DrawLines(pen, new[]
+                {
+                    new Point(bounds.Right - 1, bounds.Top + 1),
+                    new Point(bounds.Right, bounds.Top + 7),
+                    new Point(bounds.Right - 6, bounds.Top + 6)
+                });
             }
         }
 

@@ -18,6 +18,8 @@ namespace FSChecklist.Integrations.Localization
                     "Para uma melhor experiência com os callouts, abra o " +
                     "Microsoft Flight Simulator.",
                 ["Settings"] = "Configurações",
+                ["OpenChecklistsFolder"] = "Abrir pasta de checklists",
+                ["RefreshChecklists"] = "Atualizar checklists",
                 ["StartButton"] = "INICIAR OU {0}",
                 ["NoChecklistStarted"] = "Nenhuma checklist iniciada",
                 ["Ready"] = "PRONTO",
@@ -134,6 +136,8 @@ namespace FSChecklist.Integrations.Localization
                     "For a better callout experience, open Microsoft Flight " +
                     "Simulator.",
                 ["Settings"] = "Settings",
+                ["OpenChecklistsFolder"] = "Open checklists folder",
+                ["RefreshChecklists"] = "Refresh checklists",
                 ["StartButton"] = "START OR {0}",
                 ["NoChecklistStarted"] = "No checklist started",
                 ["Ready"] = "READY",

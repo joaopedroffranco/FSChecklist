@@ -9,7 +9,7 @@
   <Identity
     Name="FSChecklist.Local"
     Publisher="CN=FSChecklist Local"
-    Version="1.0.0.3"
+    Version="1.2.0.0"
     ProcessorArchitecture="neutral" />
 
   <Properties>
