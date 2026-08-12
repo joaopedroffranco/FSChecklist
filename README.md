@@ -65,8 +65,8 @@ the current version first. The installer recognizes the existing installation,
 keeps its destination, replaces the application files, and preserves existing
 JSON files in the `checklists` folder.
 
-For example, to update from `1.1.0` to `2.0.0`, run
-`FSChecklist-Setup-2.0.0-win-x64.exe` over the existing installation. Use the
+For example, to update from `2.0.0` to `2.1.0`, run
+`FSChecklist-Setup-2.1.0-win-x64.exe` over the existing installation. Use the
 same Windows user account that installed the previous version.
 
 ## Requirements
@@ -245,13 +245,11 @@ items represented by strings:
   },
   "checklists": [
     {
-      "id": "before_start",
       "name": "Before Start",
       "next": "Start",
       "items": ["Parking Brake", "Navi Lights"]
     },
     {
-      "id": "start",
       "name": "Start",
       "next": null,
       "items": ["Beacon", "APU"]

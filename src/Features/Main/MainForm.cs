@@ -248,8 +248,12 @@ namespace FSChecklist.Features.Main
             }
             catch (Exception error)
             {
-                checklistStatus = error.Message;
-                startupErrors.Add(error.GetBaseException().Message);
+                string message = error.Message;
+                checklistStatus = message;
+                if (preserveSelection)
+                    ShowError(message);
+                else
+                    startupErrors.Add(message);
             }
             RefreshStatus();
         }

@@ -1,11 +1,6 @@
 {
   "aircraft": "Fenix A320",
-  "version": "1.0",
-  "language": "en-US",
   "rules": {
-    "speakLanguage": "en-US",
-    "checklistLanguage": "en",
-    "onlyRespondWhenCalled": "Copiloto",
     "acceptAnyAnswer": false,
     "acceptedResponses": [
       "set",
@@ -19,16 +14,16 @@
       "norm",
       "no blue",
       "arm",
-      "disarm"
-    ],
-    "dontCorrect": true,
-    "dontComment": true,
-    "pauseCommands": ["pausa", "calma", "espera"],
-    "resumeCommands": ["continuar", "continua", "prosseguir", "segue"]
+      "disarm",
+      "max",
+      "medium",
+      "low",
+      "taxi",
+      "takeoff"
+    ]
   },
   "checklists": [
     {
-      "id": "before_start",
       "name": "Before Start",
       "next": "Start",
       "items": [
@@ -42,7 +37,6 @@
       ]
     },
     {
-      "id": "start",
       "name": "Start",
       "next": "Before Taxi",
       "items": [
@@ -55,51 +49,48 @@
       ]
     },
     {
-      "id": "before_taxi",
       "name": "Before Taxi",
       "next": "Taxi",
       "items": [
         "APU",
-        "Engine Mode Selector",
-        "Autobrake",
-        "Elevator Trim",
-        "Flight Controls",
+        "Mode Selector",
         "Taxi Lights"
       ]
     },
     {
-      "id": "taxi",
       "name": "Taxi",
       "next": "Before Takeoff",
       "items": [
-        "Takeoff Config"
+        "Takeoff Config",
+        "Autobrake",
+        "Elevator Trim",
+        "Flight Controls"
       ]
     },
     {
-      "id": "before_takeoff",
       "name": "Before Takeoff",
       "next": "After Takeoff",
       "items": [
         "Landing Lights",
         "Runway Lights",
+        "Taxi Lights",
         "Strobe",
         "Transponder TA/RA"
       ]
     },
     {
-      "id": "after_takeoff",
       "name": "After Takeoff",
-      "next": "Cruise",
+      "next": "Climb",
       "items": [
         "Runway Lights",
+        "Taxi Lights",
         "Spoilers",
         "Autobrake",
         "Strobe"
       ]
     },
     {
-      "id": "cruise",
-      "name": "Cruise",
+      "name": "Climb",
       "next": "Descent",
       "items": [
         "Landing Lights",
@@ -107,16 +98,14 @@
       ]
     },
     {
-      "id": "descent",
       "name": "Descent",
       "next": "Approach",
       "items": [
-        "FMC",
-        "ATIS"
+        "ATIS",
+        "FMC"
       ]
     },
     {
-      "id": "approach",
       "name": "Approach",
       "next": "Landing",
       "items": [
@@ -127,30 +116,28 @@
       ]
     },
     {
-      "id": "landing",
       "name": "Landing",
       "next": "After Landing",
       "items": [
-        "Landing Lights",
+        "Runway Lights",
         "Taxi Lights",
         "Ground Spoilers",
-        "Flaps"
+        "Flaps",
+        "Gear Down"
       ]
     },
     {
-      "id": "after_landing",
       "name": "After Landing",
       "next": "Shutdown",
       "items": [
         "APU",
         "Transponder",
-        "Taxi Lights",
         "Runway Lights",
-        "Landing Lights"
+        "Landinga Lights",
+        "Taxi Lights"
       ]
     },
     {
-      "id": "shutdown",
       "name": "Shutdown",
       "next": null,
       "items": [
