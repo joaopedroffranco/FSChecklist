@@ -1,5 +1,5 @@
 #ifndef AppVersion
-  #define AppVersion "1.2.0"
+  #define AppVersion "2.0.0"
 #endif
 #ifndef SourceRoot
   #define SourceRoot ".."
@@ -43,7 +43,7 @@ Source: "{#SourceRoot}\README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SourceRoot}\LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SourceRoot}\PRIVACY.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SourceRoot}\THIRD-PARTY-NOTICES.txt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#SourceRoot}\RELEASE_NOTES_v1.2.0.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#SourceRoot}\RELEASE_NOTES_v2.0.md"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\FSChecklist"; Filename: "{app}\FSChecklist.exe"; WorkingDir: "{app}"

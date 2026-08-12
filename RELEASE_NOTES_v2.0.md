@@ -1,4 +1,4 @@
-# FSChecklist v1.2.0
+# FSChecklist v2.0
 
 This release introduces a Windows installer and makes custom checklist file
 management easier while preserving the lightweight JSON-based workflow.
@@ -16,7 +16,7 @@ management easier while preserving the lightweight JSON-based workflow.
 
 ## Installation
 
-1. Download `FSChecklist-Setup-1.2.0-win-x64.exe`.
+1. Download `FSChecklist-Setup-2.0.0-win-x64.exe`.
 2. Run the installer.
 3. Review the license and choose the installation folder.
 4. Optionally create a desktop shortcut.
@@ -29,7 +29,7 @@ JSON files.
 
 ## Updating
 
-Run the `1.2.0` installer over an existing installation without uninstalling
+Run the `2.0.0` installer over an existing installation without uninstalling
 the previous version. The application files are replaced while JSON files in
 the `checklists` folder are preserved.
 
